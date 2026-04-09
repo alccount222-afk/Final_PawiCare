@@ -22,6 +22,7 @@ const FIREBASE_CONFIG = {
 const firebaseApp = initializeApp(FIREBASE_CONFIG);
 const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
+const uid = () => Math.random().toString(36).slice(2, 9);
 
 // ─── CLOUD HELPERS ────────────────────────────────────────────────────────────
 const cloud = {
@@ -4239,7 +4240,7 @@ function RecordsPage({
     marginBottom: 16,
   });
 
-  const ItemActions = ({ onEdit, id }: { onEdit: any; id: any }) => (
+  const ItemActions = ({ onEdit, id }) => (
     <div style={{ display: "flex", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
       <button
         onClick={onEdit}
