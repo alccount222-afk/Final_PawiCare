@@ -11,7 +11,7 @@ import {
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 // ─── CREDENCIALES ─────────────────────────────────────────────────────────────
-const FIREBASE_CONFIG = {
+const FIREBASE_CONFIG = { 
   apiKey: "AIzaSyDe6wm5SrWmNmDLj20CFrv3jx8g6JkQgyM",
   authDomain: "vetcare-mvp.firebaseapp.com",
   projectId: "vetcare-mvp",
