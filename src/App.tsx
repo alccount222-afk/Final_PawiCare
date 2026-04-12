@@ -26,13 +26,13 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 // ─── CLOUD HELPERS ────────────────────────────────────────────────────────────
 const cloud = {
-  async save(uid, key, data) {
+  async save(uid: string, key: string, data: any) {
     const payload = key === "profile" ? data : { list: data };
     await setDoc(doc(db, "vets", uid, "data", key), payload, {
       merge: key === "profile",
     });
   },
-  async loadAll(uid) {
+async loadAll(uid: string) {
     const [pro, pet, vis, vac, apt, inv] = await Promise.all([
       getDoc(doc(db, "vets", uid, "data", "profile")),
       getDoc(doc(db, "vets", uid, "data", "pets")),
