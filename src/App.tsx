@@ -78,21 +78,6 @@ async function sendRegistrationEmail(name, clinic, email) {
     console.error("❌ Error Web3Forms:", e);
   }
 }
-    const response = await fetch("https://api.web3forms.com/submit", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    if (data.success) {
-      console.log("✅ Notificación enviada a tu correo");
-    } else {
-      console.warn("⚠️ Web3Forms error:", data);
-    }
-  } catch (e) {
-    console.error("Error Web3Forms:", e);
-  }
-}
 function exportData(profile, pets, visits, vaccines, appointments, inventory) {
   const obj = {
     _meta: {
