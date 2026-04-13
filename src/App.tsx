@@ -54,22 +54,30 @@ async loadAll(uid: string) {
 };
 async function sendRegistrationEmail(name, clinic, email) {
   try {
-    const formData = new FormData();
-    formData.append("access_key", "b6706da0-295d-4ad1-a5c4-7cbfbb861ede");
-    formData.append(
-      "subject",
-      "🐾 Nueva veterinaria registrada en VetCare MVP"
-    );
-    formData.append("from_name", "VetCare MVP");
-    formData.append("name", name);
-    formData.append("email", email);
-    formData.append(
-      "message",
-      `Nueva veterinaria registrada:\n\nNombre: ${name}\nClínica: ${clinic}\nCorreo: ${email}\nFecha: ${new Date().toLocaleString(
-        "es-ES"
-      )}`
-    );
+    const payload = {
+      access_key: "b6706da0-295d-4ad1-a5c4-7cbfbb861ede",
+      subject: "🐾 Nueva veterinaria registrada en VetCare MVP",
+      from_name: "VetCare MVP",
+      replyto: email,
+      message: `Nueva veterinaria registrada:\n\nNombre: ${name}\nClínica: ${clinic}\nCorreo: ${email}\nFecha: ${new Date().toLocaleString("es-ES")}`,
+    };
 
+    const response = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      console.log("✅ Notificación enviada");
+    } else {
+      console.warn("⚠️ Web3Forms error:", JSON.stringify(data));
+    }
+  } catch (e) {
+    console.error("❌ Error Web3Forms:", e);
+  }
+}
     const response = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
       body: formData,
