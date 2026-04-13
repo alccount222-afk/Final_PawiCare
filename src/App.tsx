@@ -55,7 +55,7 @@ async loadAll(uid: string) {
 async function sendRegistrationEmail(name, clinic, email) {
   try {
     const payload = {
-      access_key: "b6706da0-295d-4ad1-a5c4-7cbfbb861ede",
+      access_key: "3285c47e-869f-4c14-925b-8a070ddc7432",
       subject: "🐾 Nueva veterinaria registrada en VetCare MVP",
       from_name: "VetCare MVP",
       replyto: email,
