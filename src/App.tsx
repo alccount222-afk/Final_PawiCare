@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";  
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { initializeApp } from "firebase/app";
 import {
   getAuth,
@@ -11,7 +11,7 @@ import {
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 
 // ─── CREDENCIALES ─────────────────────────────────────────────────────────────
-const FIREBASE_CONFIG = { 
+const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDe6wm5SrWmNmDLj20CFrv3jx8g6JkQgyM",
   authDomain: "vetcare-mvp.firebaseapp.com",
   projectId: "vetcare-mvp",
@@ -26,13 +26,13 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 // ─── CLOUD HELPERS ────────────────────────────────────────────────────────────
 const cloud = {
-  async save(uid: string, key: string, data: any) {
+  async save(uid, key, data) {
     const payload = key === "profile" ? data : { list: data };
     await setDoc(doc(db, "vets", uid, "data", key), payload, {
       merge: key === "profile",
     });
   },
-async loadAll(uid: string) {
+  async loadAll(uid) {
     const [pro, pet, vis, vac, apt, inv] = await Promise.all([
       getDoc(doc(db, "vets", uid, "data", "profile")),
       getDoc(doc(db, "vets", uid, "data", "pets")),
@@ -52,6 +52,7 @@ async loadAll(uid: string) {
     };
   },
 };
+
 async function sendRegistrationEmail(name, clinic, email) {
   try {
     const payload = {
@@ -59,25 +60,26 @@ async function sendRegistrationEmail(name, clinic, email) {
       subject: "🐾 Nueva veterinaria registrada en VetCare MVP",
       from_name: "VetCare MVP",
       replyto: email,
-      message: `Nueva veterinaria registrada:\n\nNombre: ${name}\nClínica: ${clinic}\nCorreo: ${email}\nFecha: ${new Date().toLocaleString("es-ES")}`,
+      message: `Nueva veterinaria registrada:\n\nNombre: ${name}\nClínica: ${clinic}\nCorreo: ${email}\nFecha: ${new Date().toLocaleString(
+        "es-ES"
+      )}`,
     };
-
     const response = await fetch("https://api.web3forms.com/submit", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify(payload),
     });
-
     const data = await response.json();
-    if (data.success) {
-      console.log("✅ Notificación enviada");
-    } else {
-      console.warn("⚠️ Web3Forms error:", JSON.stringify(data));
-    }
+    if (data.success) console.log("✅ Notificación enviada");
+    else console.warn("⚠️ Web3Forms error:", JSON.stringify(data));
   } catch (e) {
     console.error("❌ Error Web3Forms:", e);
   }
 }
+
 function exportData(profile, pets, visits, vaccines, appointments, inventory) {
   const obj = {
     _meta: {
@@ -182,12 +184,700 @@ const FONT = `
   body{font-family:'DM Sans',sans-serif;background:${C.bg};color:${C.text};}
   ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:transparent;} ::-webkit-scrollbar-thumb{background:${C.border};border-radius:3px;}
   @keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fadeInScale{from{opacity:0;transform:scale(0.92) translateY(16px);}to{opacity:1;transform:scale(1) translateY(0);}}
+  @keyframes floatDog{0%,100%{transform:translateY(0px);}50%{transform:translateY(-8px);}}
   @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
   @keyframes spin{to{transform:rotate(360deg);}}
+  @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
+  @keyframes ripple{0%{transform:scale(0);opacity:0.6;}100%{transform:scale(2.5);opacity:0;}}
   .fade-in{animation:fadeIn .35s ease forwards;}
   .badge-pulse{animation:pulse 2s infinite;}
   .spinner{width:20px;height:20px;border:2px solid ${C.border};border-top-color:${C.accent};border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+  .float-dog{animation:floatDog 3s ease-in-out infinite;}
 `;
+
+// ─── PAWI DOG SVG ILLUSTRATION ────────────────────────────────────────────────
+// A friendly 3D-style cartoon dog with headset — 100% inline SVG
+function PawiDogIllustration() {
+  return (
+    <svg
+      viewBox="0 0 260 260"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ width: 200, height: 200, display: "block", margin: "0 auto" }}
+    >
+      {/* ── Drop shadow ── */}
+      <ellipse
+        cx="130"
+        cy="248"
+        rx="56"
+        ry="10"
+        fill="#00C49A"
+        opacity="0.18"
+      />
+
+      {/* ── Body ── */}
+      <ellipse cx="130" cy="188" rx="52" ry="42" fill="url(#bodyGrad)" />
+      <defs>
+        <radialGradient id="bodyGrad" cx="40%" cy="35%" r="65%">
+          <stop offset="0%" stopColor="#F5D5A8" />
+          <stop offset="100%" stopColor="#E8B87A" />
+        </radialGradient>
+        <radialGradient id="headGrad" cx="38%" cy="32%" r="62%">
+          <stop offset="0%" stopColor="#F7DEB5" />
+          <stop offset="100%" stopColor="#E8B87A" />
+        </radialGradient>
+        <radialGradient id="earGrad" cx="40%" cy="30%" r="60%">
+          <stop offset="0%" stopColor="#D4956B" />
+          <stop offset="100%" stopColor="#B8744A" />
+        </radialGradient>
+        <radialGradient id="snoutGrad" cx="40%" cy="35%" r="60%">
+          <stop offset="0%" stopColor="#FBF0E0" />
+          <stop offset="100%" stopColor="#F0D8B0" />
+        </radialGradient>
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow
+            dx="0"
+            dy="4"
+            stdDeviation="6"
+            floodColor="#00A87A"
+            floodOpacity="0.2"
+          />
+        </filter>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+          <feMerge>
+            <feMergeNode in="coloredBlur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      {/* ── Left ear (floppy) ── */}
+      <ellipse
+        cx="89"
+        cy="104"
+        rx="20"
+        ry="30"
+        fill="url(#earGrad)"
+        transform="rotate(-18 89 104)"
+      />
+      <ellipse
+        cx="89"
+        cy="108"
+        rx="12"
+        ry="22"
+        fill="#C4845A"
+        opacity="0.4"
+        transform="rotate(-18 89 108)"
+      />
+
+      {/* ── Right ear (floppy) ── */}
+      <ellipse
+        cx="171"
+        cy="104"
+        rx="20"
+        ry="30"
+        fill="url(#earGrad)"
+        transform="rotate(18 171 104)"
+      />
+      <ellipse
+        cx="171"
+        cy="108"
+        rx="12"
+        ry="22"
+        fill="#C4845A"
+        opacity="0.4"
+        transform="rotate(18 171 108)"
+      />
+
+      {/* ── Headset band ── */}
+      <path
+        d="M 85 96 Q 130 52 175 96"
+        stroke="#1E293B"
+        strokeWidth="7"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 85 96 Q 130 52 175 96"
+        stroke="#334155"
+        strokeWidth="4"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+
+      {/* ── Headset ear cups ── */}
+      {/* Left cup */}
+      <rect x="72" y="92" width="22" height="26" rx="11" fill="#00C49A" />
+      <rect x="75" y="95" width="16" height="20" rx="8" fill="#00E5B0" />
+      <rect
+        x="78"
+        y="98"
+        width="10"
+        height="14"
+        rx="5"
+        fill="#1E293B"
+        opacity="0.15"
+      />
+      {/* Right cup */}
+      <rect x="166" y="92" width="22" height="26" rx="11" fill="#00C49A" />
+      <rect x="169" y="95" width="16" height="20" rx="8" fill="#00E5B0" />
+      <rect
+        x="172"
+        y="98"
+        width="10"
+        height="14"
+        rx="5"
+        fill="#1E293B"
+        opacity="0.15"
+      />
+
+      {/* ── Head ── */}
+      <circle
+        cx="130"
+        cy="118"
+        r="52"
+        fill="url(#headGrad)"
+        filter="url(#softShadow)"
+      />
+
+      {/* ── Head highlight ── */}
+      <ellipse
+        cx="116"
+        cy="96"
+        rx="18"
+        ry="12"
+        fill="white"
+        opacity="0.22"
+        transform="rotate(-15 116 96)"
+      />
+
+      {/* ── Snout ── */}
+      <ellipse cx="130" cy="136" rx="26" ry="20" fill="url(#snoutGrad)" />
+      <ellipse cx="130" cy="136" rx="22" ry="16" fill="#FDF5E6" opacity="0.6" />
+
+      {/* ── Nose ── */}
+      <ellipse cx="130" cy="128" rx="10" ry="7" fill="#2D1B0E" />
+      <ellipse cx="126" cy="126" rx="4" ry="3" fill="white" opacity="0.55" />
+      <ellipse cx="132" cy="129" rx="2" ry="1.5" fill="white" opacity="0.3" />
+
+      {/* ── Smile ── */}
+      <path
+        d="M 116 138 Q 130 152 144 138"
+        stroke="#C4845A"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.7"
+      />
+
+      {/* ── Eyes ── */}
+      {/* Left eye */}
+      <circle cx="112" cy="112" r="11" fill="#1E293B" />
+      <circle cx="112" cy="112" r="8" fill="#2D4A3E" />
+      <circle cx="114" cy="109" r="4" fill="white" opacity="0.9" />
+      <circle cx="116" cy="110" r="2" fill="white" opacity="0.5" />
+      {/* Right eye */}
+      <circle cx="148" cy="112" r="11" fill="#1E293B" />
+      <circle cx="148" cy="112" r="8" fill="#2D4A3E" />
+      <circle cx="150" cy="109" r="4" fill="white" opacity="0.9" />
+      <circle cx="152" cy="110" r="2" fill="white" opacity="0.5" />
+
+      {/* ── Eyebrows (friendly raised) ── */}
+      <path
+        d="M 104 101 Q 112 97 120 101"
+        stroke="#B8744A"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 140 101 Q 148 97 156 101"
+        stroke="#B8744A"
+        strokeWidth="2.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+
+      {/* ── Cheek blush ── */}
+      <ellipse cx="98" cy="128" rx="10" ry="7" fill="#FF9999" opacity="0.28" />
+      <ellipse cx="162" cy="128" rx="10" ry="7" fill="#FF9999" opacity="0.28" />
+
+      {/* ── Microphone boom ── */}
+      <path
+        d="M 72 110 Q 55 125 58 148"
+        stroke="#334155"
+        strokeWidth="3.5"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* Mic head */}
+      <rect x="48" y="143" width="20" height="12" rx="6" fill="#1E293B" />
+      <rect x="50" y="145" width="16" height="8" rx="4" fill="#00C49A" />
+      {/* Mic dot */}
+      <circle cx="58" cy="149" r="2.5" fill="white" opacity="0.7" />
+
+      {/* ── Paws on front ── */}
+      <ellipse cx="100" cy="224" rx="20" ry="14" fill="#E8B87A" />
+      <ellipse cx="160" cy="224" rx="20" ry="14" fill="#E8B87A" />
+      {/* Paw details */}
+      <circle cx="96" cy="220" r="4" fill="#D4956B" opacity="0.5" />
+      <circle cx="104" cy="218" r="4" fill="#D4956B" opacity="0.5" />
+      <circle cx="100" cy="228" r="4" fill="#D4956B" opacity="0.5" />
+      <circle cx="156" cy="220" r="4" fill="#D4956B" opacity="0.5" />
+      <circle cx="164" cy="218" r="4" fill="#D4956B" opacity="0.5" />
+      <circle cx="160" cy="228" r="4" fill="#D4956B" opacity="0.5" />
+
+      {/* ── Tail ── */}
+      <path
+        d="M 178 200 Q 210 170 202 148 Q 196 132 183 140"
+        stroke="#E8B87A"
+        strokeWidth="14"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M 178 200 Q 210 170 202 148 Q 196 132 183 140"
+        stroke="#F5D5A8"
+        strokeWidth="6"
+        fill="none"
+        strokeLinecap="round"
+        opacity="0.6"
+      />
+
+      {/* ── Pawi logo badge ── */}
+      <circle cx="130" cy="182" r="16" fill="#00C49A" filter="url(#glow)" />
+      <circle cx="130" cy="182" r="13" fill="#00E5B0" />
+      <text
+        x="130"
+        y="187"
+        textAnchor="middle"
+        fontSize="12"
+        fontWeight="bold"
+        fill="#1E293B"
+        fontFamily="sans-serif"
+      >
+        🐾
+      </text>
+    </svg>
+  );
+}
+
+// ─── WELCOME MODAL (PAWI) ─────────────────────────────────────────────────────
+function WelcomeModal({ authUser, profile, onComplete }) {
+  const [phone, setPhone] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [ripple, setRipple] = useState(false);
+
+  const handleSubmit = async () => {
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.length < 9) {
+      setError("El número debe tener exactamente 9 dígitos.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      // Save phone to Firestore profile
+      await cloud.save(authUser.uid, "profile", {
+        ...(profile || {}),
+        phone: cleaned,
+        welcomeCompleted: true,
+      });
+    } catch (e) {
+      console.error("Error guardando teléfono:", e);
+    }
+    setSaving(false);
+    onComplete(cleaned);
+  };
+
+  const handleSkip = () => {
+    onComplete(null);
+  };
+
+  const triggerRipple = () => {
+    setRipple(true);
+    setTimeout(() => setRipple(false), 600);
+  };
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        // Blurred + tinted backdrop — cannot click through
+        background: "rgba(10, 30, 26, 0.55)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
+      }}
+    >
+      {/* ── Animated background circles ── */}
+      <div
+        style={{
+          position: "absolute",
+          width: 500,
+          height: 500,
+          borderRadius: "50%",
+          background: "radial-gradient(circle, #00D4A015 0%, transparent 70%)",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          animation: "floatDog 6s ease-in-out infinite",
+          pointerEvents: "none",
+        }}
+      />
+
+      {/* ── Modal card ── */}
+      <div
+        style={{
+          position: "relative",
+          background: "#FFFFFF",
+          borderRadius: 28,
+          width: "min(520px, 94vw)",
+          maxHeight: "94vh",
+          overflowY: "auto",
+          boxShadow:
+            "0 32px 80px rgba(0,180,130,0.18), 0 8px 32px rgba(0,0,0,0.14)",
+          border: "1.5px solid #E0F7F2",
+          animation:
+            "fadeInScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
+        }}
+      >
+        {/* ── Top accent strip ── */}
+        <div
+          style={{
+            height: 6,
+            background:
+              "linear-gradient(90deg, #00D4A0, #00B386, #4DA6FF, #00D4A0)",
+            backgroundSize: "200% auto",
+            animation: "shimmer 3s linear infinite",
+            borderRadius: "28px 28px 0 0",
+          }}
+        />
+
+        {/* ── Content ── */}
+        <div style={{ padding: "32px 40px 36px" }}>
+          {/* ── Dog illustration ── */}
+          <div
+            className="float-dog"
+            style={{
+              marginBottom: 8,
+              filter: "drop-shadow(0 8px 24px rgba(0,180,130,0.22))",
+            }}
+          >
+            <PawiDogIllustration />
+          </div>
+
+          {/* ── Pawi badge ── */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              marginBottom: 14,
+            }}
+          >
+            <div
+              style={{
+                background: "linear-gradient(135deg, #00D4A015, #4DA6FF10)",
+                border: "1.5px solid #00D4A040",
+                borderRadius: 100,
+                padding: "5px 16px",
+                fontSize: 11,
+                fontWeight: 800,
+                color: "#00875A",
+                letterSpacing: "1px",
+                textTransform: "uppercase",
+              }}
+            >
+              🐾 Pawi · Plataforma Veterinaria
+            </div>
+          </div>
+
+          {/* ── Headline ── */}
+          <h1
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: 26,
+              fontWeight: 700,
+              color: "#1E293B",
+              textAlign: "center",
+              marginBottom: 10,
+              lineHeight: 1.25,
+            }}
+          >
+            ¡Bienvenido a la comunidad Pawi!
+            <span style={{ display: "block", fontSize: 22 }}>🐾</span>
+          </h1>
+
+          {/* ── Subtitle ── */}
+          <p
+            style={{
+              fontSize: 14,
+              color: "#475569",
+              textAlign: "center",
+              lineHeight: 1.65,
+              marginBottom: 20,
+            }}
+          >
+            Queremos que aproveches al máximo la plataforma.
+            <br />
+            <strong style={{ color: "#1E293B" }}>
+              Déjanos tu número para:
+            </strong>
+          </p>
+
+          {/* ── Benefit list ── */}
+          <div
+            style={{
+              background: "linear-gradient(135deg, #F0FDF9, #EFF9FF)",
+              border: "1.5px solid #D1FAF0",
+              borderRadius: 16,
+              padding: "16px 20px",
+              marginBottom: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+            }}
+          >
+            {[
+              ["📲", "Enviarte un tutorial rápido de bienvenida por WhatsApp."],
+              ["🛠️", "Brindarte soporte directo ante cualquier duda técnica."],
+              [
+                "💬",
+                "Escuchar tus comentarios y mejoras, ¡estamos en fase beta y tu experiencia es nuestra prioridad!",
+              ],
+            ].map(([icon, text], i) => (
+              <div
+                key={i}
+                style={{ display: "flex", gap: 12, alignItems: "flex-start" }}
+              >
+                <div
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 9,
+                    flexShrink: 0,
+                    background: "#00D4A018",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 16,
+                  }}
+                >
+                  {icon}
+                </div>
+                <p
+                  style={{
+                    fontSize: 13,
+                    color: "#334155",
+                    lineHeight: 1.55,
+                    margin: 0,
+                    paddingTop: 6,
+                  }}
+                >
+                  {text}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── Phone input ── */}
+          <div style={{ marginBottom: 10, position: "relative" }}>
+            <div
+              style={{
+                position: "absolute",
+                left: 16,
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: 18,
+                pointerEvents: "none",
+              }}
+            >
+              📞
+            </div>
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => {
+                // 1. Filtramos para dejar solo números
+                const val = e.target.value.replace(/\D/g, "");
+
+                // 2. Si el primer número no es 9, no actualizamos el estado
+                if (val.length > 0 && val[0] !== "9") {
+                  setError("El número de celular debe empezar con 9");
+                  return;
+                }
+
+                // 3. Si tiene más de 9 dígitos, ignoramos la entrada adicional
+                if (val.length > 9) return;
+
+                setPhone(val);
+                setError("");
+              }}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="Número de celular"
+              maxLength={9}
+              style={{
+                width: "100%",
+                padding: "14px 18px 14px 50px",
+                background: "#F8FAFC",
+                border: `2px solid ${
+                  error ? C.danger : phone.length > 9 ? "#00D4A0" : "#E2E8F0"
+                }`,
+                borderRadius: 14,
+                color: "#1E293B",
+                fontSize: 15,
+                outline: "none",
+                fontFamily: "inherit",
+                transition: "border-color .2s",
+                letterSpacing: "0.5px",
+              }}
+              onFocus={(e) => {
+                if (!error) e.target.style.borderColor = "#00D4A0";
+              }}
+              onBlur={(e) => {
+                if (!error && phone.length <= 5)
+                  e.target.style.borderColor = "#E2E8F0";
+              }}
+            />
+          </div>
+
+          {error && (
+            <div
+              style={{
+                background: "#FF4D6D12",
+                border: "1px solid #FF4D6D30",
+                borderRadius: 10,
+                padding: "8px 14px",
+                fontSize: 13,
+                color: C.danger,
+                marginBottom: 10,
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              ⚠️ {error}
+            </div>
+          )}
+
+          {/* ── CTA Button ── */}
+          <div
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              borderRadius: 14,
+              marginTop: 6,
+            }}
+          >
+            <button
+              onClick={() => {
+                triggerRipple();
+                handleSubmit();
+              }}
+              disabled={saving}
+              style={{
+                width: "100%",
+                padding: "15px",
+                background: saving
+                  ? "#94A3B8"
+                  : "linear-gradient(135deg, #00D4A0, #00B386)",
+                color: "#fff",
+                border: "none",
+                borderRadius: 14,
+                fontWeight: 800,
+                fontSize: 16,
+                cursor: saving ? "default" : "pointer",
+                letterSpacing: "0.4px",
+                fontFamily: "inherit",
+                transition: "all .2s",
+                boxShadow: saving ? "none" : "0 4px 20px rgba(0,180,130,0.35)",
+                transform: saving ? "none" : "translateY(0)",
+                position: "relative",
+                zIndex: 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!saving) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow =
+                    "0 8px 28px rgba(0,180,130,0.45)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow =
+                  "0 4px 20px rgba(0,180,130,0.35)";
+              }}
+            >
+              {saving ? (
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span
+                    className="spinner"
+                    style={{
+                      borderTopColor: "#fff",
+                      borderColor: "rgba(255,255,255,0.3)",
+                    }}
+                  />
+                  Guardando...
+                </span>
+              ) : (
+                "🚀 Comenzar"
+              )}
+            </button>
+            {/* Ripple effect */}
+            {ripple && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  width: 60,
+                  height: 60,
+                  borderRadius: "50%",
+                  background: "rgba(255,255,255,0.4)",
+                  transform: "translate(-50%, -50%)",
+                  animation: "ripple 0.6s ease-out forwards",
+                  pointerEvents: "none",
+                  zIndex: 0,
+                }}
+              />
+            )}
+          </div>
+
+          {/* ── Privacy note ── */}
+          <p
+            style={{
+              textAlign: "center",
+              fontSize: 11,
+              color: "#94A3B8",
+              marginTop: 12,
+              lineHeight: 1.5,
+            }}
+          >
+            🔒 Tu número es confidencial. Solo lo usamos para soporte.
+            <br />
+            No compartimos tu información con terceros.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ─── SMALL COMPONENTS ─────────────────────────────────────────────────────────
 function Badge({ children, color = C.accent }) {
@@ -209,6 +899,7 @@ function Badge({ children, color = C.accent }) {
     </span>
   );
 }
+
 function Card({ children, style = {} }) {
   return (
     <div
@@ -225,6 +916,7 @@ function Card({ children, style = {} }) {
     </div>
   );
 }
+
 function Input({ label, ...props }) {
   return (
     <div style={{ marginBottom: 14 }}>
@@ -263,7 +955,7 @@ function Input({ label, ...props }) {
 
 // ─── AUTH SCREEN ──────────────────────────────────────────────────────────────
 function AuthScreen({ onAuth }) {
-  const [mode, setMode] = useState("login"); // "login" | "register" | "forgot"
+  const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
     name: "",
     clinic: "",
@@ -285,7 +977,8 @@ function AuthScreen({ onAuth }) {
           form.email,
           form.password
         );
-        onAuth(cred.user);
+        // isNew = false for login
+        onAuth(cred.user, false);
       } else if (mode === "register") {
         const cred = await createUserWithEmailAndPassword(
           auth,
@@ -306,7 +999,8 @@ function AuthScreen({ onAuth }) {
         await cloud.save(cred.user.uid, "appointments", SEED_APPOINTMENTS);
         await cloud.save(cred.user.uid, "inventory", SEED_INVENTORY);
         sendRegistrationEmail(form.name, form.clinic, form.email);
-        onAuth(cred.user);
+        // isNew = TRUE → triggers welcome modal
+        onAuth(cred.user, true);
       } else if (mode === "forgot") {
         await sendPasswordResetEmail(auth, form.email);
         setResetSent(true);
@@ -449,7 +1143,6 @@ function AuthScreen({ onAuth }) {
         }}
       >
         <div style={{ width: "100%", maxWidth: 400 }}>
-          {/* ── FORGOT PASSWORD VIEW ── */}
           {mode === "forgot" && (
             <>
               <button
@@ -470,15 +1163,8 @@ function AuthScreen({ onAuth }) {
               >
                 ← Volver al inicio de sesión
               </button>
-
               {resetSent ? (
-                /* ── SUCCESS STATE ── */
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "32px 0",
-                  }}
-                >
+                <div style={{ textAlign: "center", padding: "32px 0" }}>
                   <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
                   <div
                     style={{
@@ -535,7 +1221,6 @@ function AuthScreen({ onAuth }) {
                   </button>
                 </div>
               ) : (
-                /* ── FORGOT FORM ── */
                 <>
                   <div
                     style={{
@@ -610,7 +1295,6 @@ function AuthScreen({ onAuth }) {
             </>
           )}
 
-          {/* ── LOGIN / REGISTER VIEW ── */}
           {mode !== "forgot" && (
             <>
               <div
@@ -685,7 +1369,6 @@ function AuthScreen({ onAuth }) {
                       setForm({ ...form, password: e.target.value })
                     }
                   />
-                  {/* Forgot password link — solo visible en login */}
                   {mode === "login" && (
                     <button
                       type="button"
@@ -731,7 +1414,6 @@ function AuthScreen({ onAuth }) {
                     : "Crear cuenta"}
                 </button>
               </form>
-
               <div
                 style={{ height: 1, background: C.border, margin: "20px 0" }}
               />
@@ -763,6 +1445,7 @@ function AuthScreen({ onAuth }) {
     </div>
   );
 }
+
 // ─── MAIN PLATFORM ────────────────────────────────────────────────────────────
 export default function VetPlatform() {
   const [authUser, setAuthUser] = useState(undefined);
@@ -771,8 +1454,10 @@ export default function VetPlatform() {
   const [selectedPet, setSelectedPet] = useState(null);
   const [showModal, setShowModal] = useState(null);
   const [saving, setSaving] = useState(false);
-  const [results, setResults] = useState([]); // in-memory PDF/image results
+  const [results, setResults] = useState([]);
   const [aptPrefill, setAptPrefill] = useState(null);
+  // ── NEW: Welcome modal state ──
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   const [pets, setPets] = useState([]);
   const [visits, setVisits] = useState([]);
@@ -797,6 +1482,26 @@ export default function VetPlatform() {
     });
     return unsub;
   }, []);
+
+  // ── MODIFIED: accept isNew flag ──
+  const handleAuth = useCallback((user, isNew = false) => {
+    setAuthUser(user);
+    if (isNew) {
+      setShowWelcomeModal(true);
+    }
+  }, []);
+
+  const handleWelcomeComplete = useCallback(
+    async (phone) => {
+      if (phone && authUser) {
+        // Reload profile to reflect saved phone
+        const data = await cloud.loadAll(authUser.uid);
+        if (data.profile) setProfile(data.profile);
+      }
+      setShowWelcomeModal(false);
+    },
+    [authUser]
+  );
 
   const save = useCallback(
     async (key, data) => {
@@ -847,11 +1552,13 @@ export default function VetPlatform() {
         <p>Cargando...</p>
       </div>
     );
+
   if (!authUser)
     return (
       <>
         <style>{FONT}</style>
-        <AuthScreen onAuth={setAuthUser} />
+        {/* Pass handleAuth which accepts isNew flag */}
+        <AuthScreen onAuth={handleAuth} />
       </>
     );
 
@@ -895,6 +1602,16 @@ export default function VetPlatform() {
   return (
     <>
       <style>{FONT}</style>
+
+      {/* ── WELCOME MODAL — renders on top of everything ── */}
+      {showWelcomeModal && (
+        <WelcomeModal
+          authUser={authUser}
+          profile={profile}
+          onComplete={handleWelcomeComplete}
+        />
+      )}
+
       {showModal === "new-appointment" && (
         <NewAppointmentModal
           pets={pets}
@@ -1846,7 +2563,6 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
 }
 
 // ─── APPOINTMENTS PAGE ────────────────────────────────────────────────────────
-// ─── APPOINTMENTS PAGE ────────────────────────────────────────────────────────
 function AppointmentsPage({ appointments, onAdd, onUpdate }) {
   const [view, setView] = useState("Semana");
   const [weekOffset, setWeekOffset] = useState(0);
@@ -1906,7 +2622,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
     setSelectedApt(null);
   };
 
-  // ── SHARED HEADER ──────────────────────────────────────────────────────────
   const ViewTabs = () => (
     <div
       style={{
@@ -1944,1005 +2659,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
       ))}
     </div>
   );
-
-  // ── HOY VIEW ───────────────────────────────────────────────────────────────
-  const TodayView = () => {
-    const HOURS = Array.from({ length: 13 }, (_, i) => i + 7); // 7am–7pm
-    const todayApts = appointments
-      .filter((a) => a.date === todayStr)
-      .sort((a, b) => a.time.localeCompare(b.time));
-    const getAptForHour = (h) =>
-      todayApts.filter((a) => {
-        const ah = parseInt(a.time?.split(":")[0] || "0");
-        return ah === h;
-      });
-    return (
-      <div style={{ display: "flex", gap: 20 }}>
-        <div style={{ flex: 1 }}>
-          <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div
-              style={{
-                padding: "16px 20px",
-                borderBottom: `1px solid ${C.border}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: C.accent + "20",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: 16,
-                  color: "#0f766e",
-                }}
-              >
-                {today.getDate()}
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  {today.toLocaleDateString("es-ES", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </div>
-                <div style={{ fontSize: 12, color: C.textMuted }}>
-                  {todayApts.length} cita{todayApts.length !== 1 ? "s" : ""}{" "}
-                  programadas
-                </div>
-              </div>
-            </div>
-            <div style={{ overflowY: "auto", maxHeight: 520 }}>
-              {HOURS.map((h) => {
-                const apts = getAptForHour(h);
-                return (
-                  <div
-                    key={h}
-                    style={{
-                      display: "flex",
-                      minHeight: 60,
-                      borderBottom: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 56,
-                        padding: "8px 0 0 14px",
-                        fontSize: 12,
-                        color: C.textDim,
-                        fontWeight: 600,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
-                    </div>
-                    <div
-                      onClick={() =>
-                        onAdd({
-                          date: todayStr,
-                          time: `${String(h).padStart(2, "0")}:00`,
-                        })
-                      }
-                      style={{
-                        flex: 1,
-                        padding: "6px 10px 6px 6px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        cursor: "cell",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = C.accent + "07";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "transparent";
-                      }}
-                    >
-                      {apts.map((a, i) => (
-                        <div
-                          key={i}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedApt(a);
-                          }}
-                          style={{
-                            background: STATUS_BG[a.status] || "#F1F5F9",
-                            border: `1.5px solid ${
-                              STATUS_COLOR[a.status] || C.border
-                            }30`,
-                            borderLeft: `3px solid ${
-                              STATUS_COLOR[a.status] || C.border
-                            }`,
-                            borderRadius: 8,
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            transition: "transform .15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.transform =
-                              "translateX(3px)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.transform = "translateX(0)")
-                          }
-                        >
-                          <span style={{ fontSize: 16 }}>{a.avatar}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13 }}>
-                              {a.pet}
-                            </div>
-                            <div style={{ fontSize: 11, color: C.textMuted }}>
-                              {a.owner} · {a.type}
-                            </div>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: STATUS_COLOR[a.status],
-                            }}
-                          >
-                            {a.time}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        </div>
-        {selectedApt && (
-          <AptDetailPanel
-            apt={selectedApt}
-            onClose={() => setSelectedApt(null)}
-            onCycle={cycleStatus}
-          />
-        )}
-      </div>
-    );
-  };
-
-  // ── SEMANA VIEW ────────────────────────────────────────────────────────────
-  const WeekView = () => {
-    // Get Monday of current week + offset
-    const baseMonday = new Date(today);
-    const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
-    baseMonday.setDate(today.getDate() - dow + weekOffset * 7);
-
-    const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-    const DAYS_FULL = [
-      "Lunes",
-      "Martes",
-      "Miércoles",
-      "Jueves",
-      "Viernes",
-      "Sábado",
-      "Domingo",
-    ];
-    const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
-
-    const weekDays = Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(baseMonday);
-      d.setDate(baseMonday.getDate() + i);
-      return d;
-    });
-
-    const weekStart = weekDays[0];
-    const weekEnd = weekDays[6];
-    const fmtRange = `${weekStart.getDate()} ${weekStart.toLocaleDateString(
-      "es-ES",
-      { month: "short" }
-    )} — ${weekEnd.getDate()} ${weekEnd.toLocaleDateString("es-ES", {
-      month: "short",
-      year: "numeric",
-    })}`;
-
-    const getApts = (dayDate, hour) => {
-      const ds = dayDate.toISOString().split("T")[0];
-      return appointments.filter(
-        (a) => a.date === ds && parseInt(a.time?.split(":")[0] || "0") === hour
-      );
-    };
-
-    return (
-      <div style={{ display: "flex", gap: 20 }}>
-        <div style={{ flex: 1, overflow: "hidden" }}>
-          <Card style={{ padding: 0 }}>
-            {/* Week nav */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              <button
-                onClick={() => setWeekOffset((w) => w - 1)}
-                style={{
-                  background: C.bg,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                  cursor: "pointer",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: C.text,
-                }}
-              >
-                ‹
-              </button>
-              <div style={{ textAlign: "center" }}>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmtRange}</div>
-                {weekOffset === 0 && (
-                  <div
-                    style={{ fontSize: 11, color: C.accent, fontWeight: 700 }}
-                  >
-                    Esta semana
-                  </div>
-                )}
-              </div>
-              <div style={{ display: "flex", gap: 6 }}>
-                {weekOffset !== 0 && (
-                  <button
-                    onClick={() => setWeekOffset(0)}
-                    style={{
-                      background: C.accentDim,
-                      border: `1px solid ${C.accent}30`,
-                      borderRadius: 8,
-                      padding: "6px 12px",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#0f766e",
-                    }}
-                  >
-                    Hoy
-                  </button>
-                )}
-                <button
-                  onClick={() => setWeekOffset((w) => w + 1)}
-                  style={{
-                    background: C.bg,
-                    border: `1px solid ${C.border}`,
-                    borderRadius: 8,
-                    padding: "6px 12px",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    color: C.text,
-                  }}
-                >
-                  ›
-                </button>
-              </div>
-            </div>
-
-            <div style={{ overflowX: "auto" }}>
-              <div style={{ minWidth: 760 }}>
-                {/* Day headers */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "52px repeat(7,1fr)",
-                    borderBottom: `1px solid ${C.border}`,
-                  }}
-                >
-                  <div />
-                  {weekDays.map((d, i) => {
-                    const ds = d.toISOString().split("T")[0];
-                    const isToday = ds === todayStr;
-                    const dayApts = appointments.filter(
-                      (a) => a.date === ds
-                    ).length;
-                    return (
-                      <div
-                        key={i}
-                        style={{
-                          padding: "10px 8px",
-                          textAlign: "center",
-                          borderLeft: `1px solid ${C.border}`,
-                          background: isToday ? C.accent + "10" : "transparent",
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 600,
-                            color: isToday ? "#0f766e" : C.textMuted,
-                            textTransform: "uppercase",
-                            letterSpacing: ".5px",
-                          }}
-                        >
-                          {DAYS_ES[i]}
-                        </div>
-                        <div
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: "50%",
-                            background: isToday ? C.accent : "transparent",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "4px auto 2px",
-                            fontWeight: 800,
-                            fontSize: 16,
-                            color: isToday ? "#fff" : C.text,
-                          }}
-                        >
-                          {d.getDate()}
-                        </div>
-                        {dayApts > 0 && (
-                          <div
-                            style={{
-                              fontSize: 10,
-                              background: isToday ? "#0f766e" : C.info,
-                              color: "#fff",
-                              borderRadius: 100,
-                              padding: "1px 6px",
-                              display: "inline-block",
-                              fontWeight: 700,
-                            }}
-                          >
-                            {dayApts}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Time rows */}
-                <div style={{ overflowY: "auto", maxHeight: 480 }}>
-                  {HOURS.map((h) => (
-                    <div
-                      key={h}
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "52px repeat(7,1fr)",
-                        borderBottom: `1px solid ${C.border}`,
-                        minHeight: 64,
-                      }}
-                    >
-                      <div
-                        style={{
-                          padding: "8px 4px 0 10px",
-                          fontSize: 11,
-                          color: C.textDim,
-                          fontWeight: 600,
-                          flexShrink: 0,
-                        }}
-                      >
-                        {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
-                      </div>
-                      {weekDays.map((d, di) => {
-                        const ds = d.toISOString().split("T")[0];
-                        const isToday = ds === todayStr;
-                        const apts = getApts(d, h);
-                        return (
-                          <div
-                            key={di}
-                            onClick={() =>
-                              onAdd({
-                                date: ds,
-                                time: `${String(h).padStart(2, "0")}:00`,
-                              })
-                            }
-                            style={{
-                              borderLeft: `1px solid ${C.border}`,
-                              padding: "4px 5px",
-                              background: isToday
-                                ? C.accent + "04"
-                                : "transparent",
-                              display: "flex",
-                              flexDirection: "column",
-                              gap: 3,
-                              cursor: "cell",
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.background = isToday
-                                ? C.accent + "10"
-                                : C.accent + "07";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.background = isToday
-                                ? C.accent + "04"
-                                : "transparent";
-                            }}
-                          >
-                            {apts.map((a, ai) => (
-                              <div
-                                key={ai}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedApt(a);
-                                }}
-                                style={{
-                                  background: STATUS_COLOR[a.status] + "20",
-                                  borderLeft: `2.5px solid ${
-                                    STATUS_COLOR[a.status] || C.border
-                                  }`,
-                                  borderRadius: "0 6px 6px 0",
-                                  padding: "3px 6px",
-                                  cursor: "pointer",
-                                  fontSize: 11,
-                                  lineHeight: 1.3,
-                                  transition: "opacity .15s",
-                                }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.opacity = ".75")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.opacity = "1")
-                                }
-                              >
-                                <div
-                                  style={{
-                                    fontWeight: 700,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {a.time} {a.avatar}
-                                </div>
-                                <div
-                                  style={{
-                                    color: C.textMuted,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {a.pet}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-        {selectedApt && (
-          <AptDetailPanel
-            apt={selectedApt}
-            onClose={() => setSelectedApt(null)}
-            onCycle={cycleStatus}
-          />
-        )}
-      </div>
-    );
-  };
-
-  // ── MES VIEW ───────────────────────────────────────────────────────────────
-  const MonthView = () => {
-    const refDate = new Date(
-      today.getFullYear(),
-      today.getMonth() + monthOffset,
-      1
-    );
-    const year = refDate.getFullYear();
-    const month = refDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    // Monday-start offset
-    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-    const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
-
-    const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-    const monthName = refDate.toLocaleDateString("es-ES", {
-      month: "long",
-      year: "numeric",
-    });
-
-    const cells = Array.from({ length: totalCells }, (_, i) => {
-      const dayNum = i - startOffset + 1;
-      if (dayNum < 1 || dayNum > lastDay.getDate()) return null;
-      const d = new Date(year, month, dayNum);
-      const ds = d.toISOString().split("T")[0];
-      return { dayNum, ds, isToday: ds === todayStr, isPast: d < today };
-    });
-
-    const getMonthApts = (ds) => appointments.filter((a) => a.date === ds);
-
-    return (
-      <div style={{ display: "flex", gap: 20 }}>
-        <div style={{ flex: 1 }}>
-          <Card style={{ padding: 0 }}>
-            {/* Month nav */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: "14px 20px",
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              <button
-                onClick={() => setMonthOffset((m) => m - 1)}
-                style={{
-                  background: C.bg,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  cursor: "pointer",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: C.text,
-                }}
-              >
-                ‹
-              </button>
-              <div style={{ textAlign: "center" }}>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    textTransform: "capitalize",
-                  }}
-                >
-                  {monthName}
-                </div>
-                {monthOffset !== 0 && (
-                  <button
-                    onClick={() => setMonthOffset(0)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      cursor: "pointer",
-                      fontSize: 12,
-                      color: C.accent,
-                      fontWeight: 700,
-                    }}
-                  >
-                    ← Volver a hoy
-                  </button>
-                )}
-              </div>
-              <button
-                onClick={() => setMonthOffset((m) => m + 1)}
-                style={{
-                  background: C.bg,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 8,
-                  padding: "6px 14px",
-                  cursor: "pointer",
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: C.text,
-                }}
-              >
-                ›
-              </button>
-            </div>
-
-            {/* Day names header */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(7,1fr)",
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              {DAYS_ES.map((d) => (
-                <div
-                  key={d}
-                  style={{
-                    padding: "10px 0",
-                    textAlign: "center",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: C.textMuted,
-                    textTransform: "uppercase",
-                    letterSpacing: ".6px",
-                  }}
-                >
-                  {d}
-                </div>
-              ))}
-            </div>
-
-            {/* Calendar grid */}
-            <div
-              style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)" }}
-            >
-              {cells.map((cell, i) => {
-                if (!cell)
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        minHeight: 100,
-                        borderRight: `1px solid ${C.border}`,
-                        borderBottom: `1px solid ${C.border}`,
-                        background: "#FAFBFC",
-                      }}
-                    />
-                  );
-                const { dayNum, ds, isToday, isPast } = cell;
-                const apts = getMonthApts(ds);
-                const MAX_SHOW = 3;
-                return (
-                  <div
-                    key={i}
-                    onClick={() => onAdd({ date: ds })}
-                    style={{
-                      minHeight: 100,
-                      borderRight: `1px solid ${C.border}`,
-                      borderBottom: `1px solid ${C.border}`,
-                      padding: "8px 6px",
-                      background: isToday ? C.accent + "08" : "transparent",
-                      position: "relative",
-                      cursor: "cell",
-                      transition: "background .15s",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = isToday
-                        ? C.accent + "14"
-                        : C.accent + "06";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = isToday
-                        ? C.accent + "08"
-                        : "transparent";
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 26,
-                        height: 26,
-                        borderRadius: "50%",
-                        background: isToday ? C.accent : "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontWeight: isToday || apts.length > 0 ? 700 : 400,
-                        fontSize: 13,
-                        color: isToday ? "#fff" : isPast ? C.textDim : C.text,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {dayNum}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                      }}
-                    >
-                      {apts.slice(0, MAX_SHOW).map((a, ai) => (
-                        <div
-                          key={ai}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedApt(a);
-                          }}
-                          style={{
-                            background: STATUS_COLOR[a.status] + "22",
-                            borderLeft: `2px solid ${STATUS_COLOR[a.status]}`,
-                            borderRadius: "0 5px 5px 0",
-                            padding: "2px 5px",
-                            fontSize: 10,
-                            fontWeight: 600,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            lineHeight: 1.4,
-                            cursor: "pointer",
-                          }}
-                        >
-                          {a.time} {a.avatar} {a.pet}
-                        </div>
-                      ))}
-                      {apts.length > MAX_SHOW && (
-                        <div
-                          style={{
-                            fontSize: 10,
-                            color: C.accent,
-                            fontWeight: 700,
-                            paddingLeft: 4,
-                          }}
-                        >
-                          +{apts.length - MAX_SHOW} más
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Legend */}
-            <div
-              style={{
-                padding: "12px 20px",
-                borderTop: `1px solid ${C.border}`,
-                display: "flex",
-                gap: 16,
-                flexWrap: "wrap",
-              }}
-            >
-              {Object.entries(STATUS_COLOR).map(([s, c]) => (
-                <div
-                  key={s}
-                  style={{ display: "flex", alignItems: "center", gap: 5 }}
-                >
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 3,
-                      background: c,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: C.textMuted,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {s}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </div>
-        {selectedApt && (
-          <AptDetailPanel
-            apt={selectedApt}
-            onClose={() => setSelectedApt(null)}
-            onCycle={cycleStatus}
-          />
-        )}
-      </div>
-    );
-  };
-
-  // ── LISTA VIEW (tabla completa) ────────────────────────────────────────────
-  const ListView = () => {
-    const [statusFilter, setStatusFilter] = useState("Todos");
-    const filtered = appointments.filter(
-      (a) => statusFilter === "Todos" || a.status === statusFilter
-    );
-    const grouped = filtered.reduce((acc, a) => {
-      (acc[a.date] = acc[a.date] || []).push(a);
-      return acc;
-    }, {});
-    const sortedDates = Object.keys(grouped).sort();
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[
-            "Todos",
-            "Confirmado",
-            "En espera",
-            "En consulta",
-            "Pendiente",
-            "Completado",
-            "Cancelado",
-          ].map((f) => (
-            <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              style={{
-                background: statusFilter === f ? C.accentDim : C.surface,
-                color: statusFilter === f ? "#0f766e" : C.textMuted,
-                border: `1px solid ${statusFilter === f ? C.accent : C.border}`,
-                borderRadius: 8,
-                padding: "5px 12px",
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        {sortedDates.length === 0 ? (
-          <Card>
-            <div
-              style={{ textAlign: "center", padding: 32, color: C.textMuted }}
-            >
-              No hay citas registradas.
-            </div>
-          </Card>
-        ) : (
-          sortedDates.map((date) => {
-            const d = new Date(date + "T00:00:00");
-            const isToday = date === todayStr;
-            return (
-              <div key={date}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 9,
-                      background: isToday ? C.accent : C.border + "60",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 800,
-                      fontSize: 14,
-                      color: isToday ? "#fff" : C.textMuted,
-                    }}
-                  >
-                    {d.getDate()}
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {d.toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.textMuted }}>
-                      {grouped[date].length} cita
-                      {grouped[date].length !== 1 ? "s" : ""}
-                    </div>
-                  </div>
-                  {isToday && <Badge color={C.accent}>Hoy</Badge>}
-                </div>
-                <Card style={{ padding: 0 }}>
-                  {[...grouped[date]]
-                    .sort((a, b) => a.time.localeCompare(b.time))
-                    .map((a, i) => (
-                      <div
-                        key={i}
-                        onClick={() => setSelectedApt(a)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                          padding: "12px 20px",
-                          borderBottom:
-                            i < grouped[date].length - 1
-                              ? `1px solid ${C.border}`
-                              : "none",
-                          cursor: "pointer",
-                          transition: "background .15s",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = C.surfaceHover)
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
-                      >
-                        <div style={{ fontSize: 22 }}>{a.avatar}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>
-                            {a.pet}{" "}
-                            <span
-                              style={{
-                                color: C.textMuted,
-                                fontWeight: 400,
-                                fontSize: 13,
-                              }}
-                            >
-                              — {a.owner}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 12, color: C.textMuted }}>
-                            {a.type}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#0f766e",
-                            minWidth: 40,
-                            textAlign: "right",
-                          }}
-                        >
-                          {a.time}
-                        </div>
-                        <Badge color={STATUS_COLOR[a.status]}>{a.status}</Badge>
-                        {a.status !== "Cancelado" &&
-                          a.status !== "Completado" && (
-                            <button
-                              onClick={(e) => cycleStatus(a, e)}
-                              style={{
-                                background: "transparent",
-                                border: `1px solid ${C.border}`,
-                                color: C.text,
-                                borderRadius: 6,
-                                padding: "4px 10px",
-                                cursor: "pointer",
-                                fontSize: 12,
-                                fontWeight: 600,
-                              }}
-                            >
-                              →
-                            </button>
-                          )}
-                        {a.status !== "Cancelado" && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              cancelApt(a);
-                            }}
-                            style={{
-                              background: C.warning + "15",
-                              border: `1px solid ${C.warning}30`,
-                              color: "#92400e",
-                              borderRadius: 6,
-                              padding: "4px 10px",
-                              cursor: "pointer",
-                              fontSize: 12,
-                              fontWeight: 600,
-                            }}
-                          >
-                            ✕
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteApt(a);
-                          }}
-                          style={{
-                            background: C.danger + "10",
-                            border: `1px solid ${C.danger}25`,
-                            color: C.danger,
-                            borderRadius: 6,
-                            padding: "4px 10px",
-                            cursor: "pointer",
-                            fontSize: 12,
-                            fontWeight: 600,
-                          }}
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    ))}
-                </Card>
-              </div>
-            );
-          })
-        )}
-      </div>
-    );
-  };
 
   const AptDetailPanel = ({ apt, onClose, onCycle }) => (
     <div className="fade-in" style={{ width: 280, flexShrink: 0 }}>
@@ -3169,7 +2885,965 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
     </div>
   );
 
-  // ── MAIN RENDER ────────────────────────────────────────────────────────────
+  const TodayView = () => {
+    const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
+    const todayApts = appointments
+      .filter((a) => a.date === todayStr)
+      .sort((a, b) => a.time.localeCompare(b.time));
+    const getAptForHour = (h) =>
+      todayApts.filter((a) => parseInt(a.time?.split(":")[0] || "0") === h);
+    return (
+      <div style={{ display: "flex", gap: 20 }}>
+        <div style={{ flex: 1 }}>
+          <Card style={{ padding: 0, overflow: "hidden" }}>
+            <div
+              style={{
+                padding: "16px 20px",
+                borderBottom: `1px solid ${C.border}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: C.accent + "20",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 800,
+                  fontSize: 16,
+                  color: "#0f766e",
+                }}
+              >
+                {today.getDate()}
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  {today.toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                  })}
+                </div>
+                <div style={{ fontSize: 12, color: C.textMuted }}>
+                  {todayApts.length} cita{todayApts.length !== 1 ? "s" : ""}{" "}
+                  programadas
+                </div>
+              </div>
+            </div>
+            <div style={{ overflowY: "auto", maxHeight: 520 }}>
+              {HOURS.map((h) => {
+                const apts = getAptForHour(h);
+                return (
+                  <div
+                    key={h}
+                    style={{
+                      display: "flex",
+                      minHeight: 60,
+                      borderBottom: `1px solid ${C.border}`,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 56,
+                        padding: "8px 0 0 14px",
+                        fontSize: 12,
+                        color: C.textDim,
+                        fontWeight: 600,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
+                    </div>
+                    <div
+                      onClick={() =>
+                        onAdd({
+                          date: todayStr,
+                          time: `${String(h).padStart(2, "0")}:00`,
+                        })
+                      }
+                      style={{
+                        flex: 1,
+                        padding: "6px 10px 6px 6px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 4,
+                        cursor: "cell",
+                      }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.background = C.accent + "07")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.background = "transparent")
+                      }
+                    >
+                      {apts.map((a, i) => (
+                        <div
+                          key={i}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedApt(a);
+                          }}
+                          style={{
+                            background: STATUS_BG[a.status] || "#F1F5F9",
+                            border: `1.5px solid ${
+                              STATUS_COLOR[a.status] || C.border
+                            }30`,
+                            borderLeft: `3px solid ${
+                              STATUS_COLOR[a.status] || C.border
+                            }`,
+                            borderRadius: 8,
+                            padding: "6px 10px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            transition: "transform .15s",
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.transform =
+                              "translateX(3px)")
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.transform = "translateX(0)")
+                          }
+                        >
+                          <span style={{ fontSize: 16 }}>{a.avatar}</span>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>
+                              {a.pet}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>
+                              {a.owner} · {a.type}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 12,
+                              fontWeight: 700,
+                              color: STATUS_COLOR[a.status],
+                            }}
+                          >
+                            {a.time}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+        </div>
+        {selectedApt && (
+          <AptDetailPanel
+            apt={selectedApt}
+            onClose={() => setSelectedApt(null)}
+            onCycle={cycleStatus}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const WeekView = () => {
+    const baseMonday = new Date(today);
+    const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
+    baseMonday.setDate(today.getDate() - dow + weekOffset * 7);
+    const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(baseMonday);
+      d.setDate(baseMonday.getDate() + i);
+      return d;
+    });
+    const weekStart = weekDays[0],
+      weekEnd = weekDays[6];
+    const fmtRange = `${weekStart.getDate()} ${weekStart.toLocaleDateString(
+      "es-ES",
+      { month: "short" }
+    )} — ${weekEnd.getDate()} ${weekEnd.toLocaleDateString("es-ES", {
+      month: "short",
+      year: "numeric",
+    })}`;
+    const getApts = (dayDate, hour) => {
+      const ds = dayDate.toISOString().split("T")[0];
+      return appointments.filter(
+        (a) => a.date === ds && parseInt(a.time?.split(":")[0] || "0") === hour
+      );
+    };
+    return (
+      <div style={{ display: "flex", gap: 20 }}>
+        <div style={{ flex: 1, overflow: "hidden" }}>
+          <Card style={{ padding: 0 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <button
+                onClick={() => setWeekOffset((w) => w - 1)}
+                style={{
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  padding: "6px 12px",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: C.text,
+                }}
+              >
+                ‹
+              </button>
+              <div style={{ textAlign: "center" }}>
+                <div style={{ fontWeight: 700, fontSize: 15 }}>{fmtRange}</div>
+                {weekOffset === 0 && (
+                  <div
+                    style={{ fontSize: 11, color: C.accent, fontWeight: 700 }}
+                  >
+                    Esta semana
+                  </div>
+                )}
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                {weekOffset !== 0 && (
+                  <button
+                    onClick={() => setWeekOffset(0)}
+                    style={{
+                      background: C.accentDim,
+                      border: `1px solid ${C.accent}30`,
+                      borderRadius: 8,
+                      padding: "6px 12px",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      color: "#0f766e",
+                    }}
+                  >
+                    Hoy
+                  </button>
+                )}
+                <button
+                  onClick={() => setWeekOffset((w) => w + 1)}
+                  style={{
+                    background: C.bg,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: C.text,
+                  }}
+                >
+                  ›
+                </button>
+              </div>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <div style={{ minWidth: 760 }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "52px repeat(7,1fr)",
+                    borderBottom: `1px solid ${C.border}`,
+                  }}
+                >
+                  <div />
+                  {weekDays.map((d, i) => {
+                    const ds = d.toISOString().split("T")[0];
+                    const isToday = ds === todayStr;
+                    const dayApts = appointments.filter(
+                      (a) => a.date === ds
+                    ).length;
+                    return (
+                      <div
+                        key={i}
+                        style={{
+                          padding: "10px 8px",
+                          textAlign: "center",
+                          borderLeft: `1px solid ${C.border}`,
+                          background: isToday ? C.accent + "10" : "transparent",
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: isToday ? "#0f766e" : C.textMuted,
+                            textTransform: "uppercase",
+                            letterSpacing: ".5px",
+                          }}
+                        >
+                          {DAYS_ES[i]}
+                        </div>
+                        <div
+                          style={{
+                            width: 32,
+                            height: 32,
+                            borderRadius: "50%",
+                            background: isToday ? C.accent : "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "4px auto 2px",
+                            fontWeight: 800,
+                            fontSize: 16,
+                            color: isToday ? "#fff" : C.text,
+                          }}
+                        >
+                          {d.getDate()}
+                        </div>
+                        {dayApts > 0 && (
+                          <div
+                            style={{
+                              fontSize: 10,
+                              background: isToday ? "#0f766e" : C.info,
+                              color: "#fff",
+                              borderRadius: 100,
+                              padding: "1px 6px",
+                              display: "inline-block",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {dayApts}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ overflowY: "auto", maxHeight: 480 }}>
+                  {HOURS.map((h) => (
+                    <div
+                      key={h}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "52px repeat(7,1fr)",
+                        borderBottom: `1px solid ${C.border}`,
+                        minHeight: 64,
+                      }}
+                    >
+                      <div
+                        style={{
+                          padding: "8px 4px 0 10px",
+                          fontSize: 11,
+                          color: C.textDim,
+                          fontWeight: 600,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
+                      </div>
+                      {weekDays.map((d, di) => {
+                        const ds = d.toISOString().split("T")[0];
+                        const isToday = ds === todayStr;
+                        const apts = getApts(d, h);
+                        return (
+                          <div
+                            key={di}
+                            onClick={() =>
+                              onAdd({
+                                date: ds,
+                                time: `${String(h).padStart(2, "0")}:00`,
+                              })
+                            }
+                            style={{
+                              borderLeft: `1px solid ${C.border}`,
+                              padding: "4px 5px",
+                              background: isToday
+                                ? C.accent + "04"
+                                : "transparent",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: 3,
+                              cursor: "cell",
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = isToday
+                                ? C.accent + "10"
+                                : C.accent + "07")
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = isToday
+                                ? C.accent + "04"
+                                : "transparent")
+                            }
+                          >
+                            {apts.map((a, ai) => (
+                              <div
+                                key={ai}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedApt(a);
+                                }}
+                                style={{
+                                  background: STATUS_COLOR[a.status] + "20",
+                                  borderLeft: `2.5px solid ${
+                                    STATUS_COLOR[a.status] || C.border
+                                  }`,
+                                  borderRadius: "0 6px 6px 0",
+                                  padding: "3px 6px",
+                                  cursor: "pointer",
+                                  fontSize: 11,
+                                  lineHeight: 1.3,
+                                  transition: "opacity .15s",
+                                }}
+                                onMouseEnter={(e) =>
+                                  (e.currentTarget.style.opacity = ".75")
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.currentTarget.style.opacity = "1")
+                                }
+                              >
+                                <div
+                                  style={{
+                                    fontWeight: 700,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {a.time} {a.avatar}
+                                </div>
+                                <div
+                                  style={{
+                                    color: C.textMuted,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {a.pet}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+        {selectedApt && (
+          <AptDetailPanel
+            apt={selectedApt}
+            onClose={() => setSelectedApt(null)}
+            onCycle={cycleStatus}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const MonthView = () => {
+    const refDate = new Date(
+      today.getFullYear(),
+      today.getMonth() + monthOffset,
+      1
+    );
+    const year = refDate.getFullYear(),
+      month = refDate.getMonth();
+    const firstDay = new Date(year, month, 1),
+      lastDay = new Date(year, month + 1, 0);
+    const startOffset = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const totalCells = Math.ceil((startOffset + lastDay.getDate()) / 7) * 7;
+    const DAYS_ES = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+    const monthName = refDate.toLocaleDateString("es-ES", {
+      month: "long",
+      year: "numeric",
+    });
+    const cells = Array.from({ length: totalCells }, (_, i) => {
+      const dayNum = i - startOffset + 1;
+      if (dayNum < 1 || dayNum > lastDay.getDate()) return null;
+      const d = new Date(year, month, dayNum);
+      const ds = d.toISOString().split("T")[0];
+      return { dayNum, ds, isToday: ds === todayStr, isPast: d < today };
+    });
+    const getMonthApts = (ds) => appointments.filter((a) => a.date === ds);
+    return (
+      <div style={{ display: "flex", gap: 20 }}>
+        <div style={{ flex: 1 }}>
+          <Card style={{ padding: 0 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "14px 20px",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <button
+                onClick={() => setMonthOffset((m) => m - 1)}
+                style={{
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: C.text,
+                }}
+              >
+                ‹
+              </button>
+              <div style={{ textAlign: "center" }}>
+                <div
+                  style={{
+                    fontWeight: 700,
+                    fontSize: 16,
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {monthName}
+                </div>
+                {monthOffset !== 0 && (
+                  <button
+                    onClick={() => setMonthOffset(0)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      fontSize: 12,
+                      color: C.accent,
+                      fontWeight: 700,
+                    }}
+                  >
+                    ← Volver a hoy
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => setMonthOffset((m) => m + 1)}
+                style={{
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  padding: "6px 14px",
+                  cursor: "pointer",
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: C.text,
+                }}
+              >
+                ›
+              </button>
+            </div>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(7,1fr)",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              {DAYS_ES.map((d) => (
+                <div
+                  key={d}
+                  style={{
+                    padding: "10px 0",
+                    textAlign: "center",
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: C.textMuted,
+                    textTransform: "uppercase",
+                    letterSpacing: ".6px",
+                  }}
+                >
+                  {d}
+                </div>
+              ))}
+            </div>
+            <div
+              style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)" }}
+            >
+              {cells.map((cell, i) => {
+                if (!cell)
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        minHeight: 100,
+                        borderRight: `1px solid ${C.border}`,
+                        borderBottom: `1px solid ${C.border}`,
+                        background: "#FAFBFC",
+                      }}
+                    />
+                  );
+                const { dayNum, ds, isToday, isPast } = cell;
+                const apts = getMonthApts(ds);
+                const MAX_SHOW = 3;
+                return (
+                  <div
+                    key={i}
+                    onClick={() => onAdd({ date: ds })}
+                    style={{
+                      minHeight: 100,
+                      borderRight: `1px solid ${C.border}`,
+                      borderBottom: `1px solid ${C.border}`,
+                      padding: "8px 6px",
+                      background: isToday ? C.accent + "08" : "transparent",
+                      cursor: "cell",
+                      transition: "background .15s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.background = isToday
+                        ? C.accent + "14"
+                        : C.accent + "06")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.background = isToday
+                        ? C.accent + "08"
+                        : "transparent")
+                    }
+                  >
+                    <div
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: "50%",
+                        background: isToday ? C.accent : "transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontWeight: isToday || apts.length > 0 ? 700 : 400,
+                        fontSize: 13,
+                        color: isToday ? "#fff" : isPast ? C.textDim : C.text,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {dayNum}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                      }}
+                    >
+                      {apts.slice(0, MAX_SHOW).map((a, ai) => (
+                        <div
+                          key={ai}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedApt(a);
+                          }}
+                          style={{
+                            background: STATUS_COLOR[a.status] + "22",
+                            borderLeft: `2px solid ${STATUS_COLOR[a.status]}`,
+                            borderRadius: "0 5px 5px 0",
+                            padding: "2px 5px",
+                            fontSize: 10,
+                            fontWeight: 600,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            lineHeight: 1.4,
+                            cursor: "pointer",
+                          }}
+                        >
+                          {a.time} {a.avatar} {a.pet}
+                        </div>
+                      ))}
+                      {apts.length > MAX_SHOW && (
+                        <div
+                          style={{
+                            fontSize: 10,
+                            color: C.accent,
+                            fontWeight: 700,
+                            paddingLeft: 4,
+                          }}
+                        >
+                          +{apts.length - MAX_SHOW} más
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div
+              style={{
+                padding: "12px 20px",
+                borderTop: `1px solid ${C.border}`,
+                display: "flex",
+                gap: 16,
+                flexWrap: "wrap",
+              }}
+            >
+              {Object.entries(STATUS_COLOR).map(([s, c]) => (
+                <div
+                  key={s}
+                  style={{ display: "flex", alignItems: "center", gap: 5 }}
+                >
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: 3,
+                      background: c,
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: C.textMuted,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {s}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+        {selectedApt && (
+          <AptDetailPanel
+            apt={selectedApt}
+            onClose={() => setSelectedApt(null)}
+            onCycle={cycleStatus}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const ListView = () => {
+    const [statusFilter, setStatusFilter] = useState("Todos");
+    const filtered = appointments.filter(
+      (a) => statusFilter === "Todos" || a.status === statusFilter
+    );
+    const grouped = filtered.reduce((acc, a) => {
+      (acc[a.date] = acc[a.date] || []).push(a);
+      return acc;
+    }, {});
+    const sortedDates = Object.keys(grouped).sort();
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {[
+            "Todos",
+            "Confirmado",
+            "En espera",
+            "En consulta",
+            "Pendiente",
+            "Completado",
+            "Cancelado",
+          ].map((f) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
+              style={{
+                background: statusFilter === f ? C.accentDim : C.surface,
+                color: statusFilter === f ? "#0f766e" : C.textMuted,
+                border: `1px solid ${statusFilter === f ? C.accent : C.border}`,
+                borderRadius: 8,
+                padding: "5px 12px",
+                cursor: "pointer",
+                fontSize: 12,
+                fontWeight: 600,
+              }}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        {sortedDates.length === 0 ? (
+          <Card>
+            <div
+              style={{ textAlign: "center", padding: 32, color: C.textMuted }}
+            >
+              No hay citas registradas.
+            </div>
+          </Card>
+        ) : (
+          sortedDates.map((date) => {
+            const d = new Date(date + "T00:00:00");
+            const isToday = date === todayStr;
+            return (
+              <div key={date}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 9,
+                      background: isToday ? C.accent : C.border + "60",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 800,
+                      fontSize: 14,
+                      color: isToday ? "#fff" : C.textMuted,
+                    }}
+                  >
+                    {d.getDate()}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 13,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {d.toLocaleDateString("es-ES", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>
+                      {grouped[date].length} cita
+                      {grouped[date].length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  {isToday && <Badge color={C.accent}>Hoy</Badge>}
+                </div>
+                <Card style={{ padding: 0 }}>
+                  {[...grouped[date]]
+                    .sort((a, b) => a.time.localeCompare(b.time))
+                    .map((a, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedApt(a)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 14,
+                          padding: "12px 20px",
+                          borderBottom:
+                            i < grouped[date].length - 1
+                              ? `1px solid ${C.border}`
+                              : "none",
+                          cursor: "pointer",
+                          transition: "background .15s",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = C.surfaceHover)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                      >
+                        <div style={{ fontSize: 22 }}>{a.avatar}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, fontSize: 14 }}>
+                            {a.pet}{" "}
+                            <span
+                              style={{
+                                color: C.textMuted,
+                                fontWeight: 400,
+                                fontSize: 13,
+                              }}
+                            >
+                              — {a.owner}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 12, color: C.textMuted }}>
+                            {a.type}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 14,
+                            color: "#0f766e",
+                            minWidth: 40,
+                            textAlign: "right",
+                          }}
+                        >
+                          {a.time}
+                        </div>
+                        <Badge color={STATUS_COLOR[a.status]}>{a.status}</Badge>
+                        {a.status !== "Cancelado" &&
+                          a.status !== "Completado" && (
+                            <button
+                              onClick={(e) => cycleStatus(a, e)}
+                              style={{
+                                background: "transparent",
+                                border: `1px solid ${C.border}`,
+                                color: C.text,
+                                borderRadius: 6,
+                                padding: "4px 10px",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                              }}
+                            >
+                              →
+                            </button>
+                          )}
+                        {a.status !== "Cancelado" && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              cancelApt(a);
+                            }}
+                            style={{
+                              background: C.warning + "15",
+                              border: `1px solid ${C.warning}30`,
+                              color: "#92400e",
+                              borderRadius: 6,
+                              padding: "4px 10px",
+                              cursor: "pointer",
+                              fontSize: 12,
+                              fontWeight: 600,
+                            }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteApt(a);
+                          }}
+                          style={{
+                            background: C.danger + "10",
+                            border: `1px solid ${C.danger}25`,
+                            color: C.danger,
+                            borderRadius: 6,
+                            padding: "4px 10px",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    ))}
+                </Card>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  };
+
   const todayApts = appointments.filter((a) => a.date === todayStr).length;
   const weekApts = (() => {
     const d = new Date(today);
@@ -3188,7 +3862,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
       className="fade-in"
       style={{ display: "flex", flexDirection: "column", gap: 20 }}
     >
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -3229,8 +3902,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
           </button>
         </div>
       </div>
-
-      {/* Quick stats */}
       <div
         style={{
           display: "grid",
@@ -3274,8 +3945,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
           </div>
         ))}
       </div>
-
-      {/* View content */}
       {view === "Hoy" && <TodayView />}
       {view === "Semana" && <WeekView />}
       {view === "Mes" && <MonthView />}
@@ -3637,55 +4306,24 @@ function PatientDetail({
               <div
                 style={{ display: "flex", flexDirection: "column", gap: 10 }}
               >
-                <Input
-                  label="Nombre"
-                  value={editForm.name}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, name: e.target.value })
-                  }
-                />
-                <Input
-                  label="Especie"
-                  value={editForm.species}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, species: e.target.value })
-                  }
-                />
-                <Input
-                  label="Raza"
-                  value={editForm.breed}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, breed: e.target.value })
-                  }
-                />
-                <Input
-                  label="Color de pelaje"
-                  value={editForm.coatColor}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, coatColor: e.target.value })
-                  }
-                />
-                <Input
-                  label="Edad"
-                  value={editForm.age}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, age: e.target.value })
-                  }
-                />
-                <Input
-                  label="Peso"
-                  value={editForm.weight}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, weight: e.target.value })
-                  }
-                />
-                <Input
-                  label="Estado"
-                  value={editForm.status}
-                  onChange={(e) =>
-                    setEditForm({ ...editForm, status: e.target.value })
-                  }
-                />
+                {[
+                  ["Nombre", "name"],
+                  ["Especie", "species"],
+                  ["Raza", "breed"],
+                  ["Color de pelaje", "coatColor"],
+                  ["Edad", "age"],
+                  ["Peso", "weight"],
+                  ["Estado", "status"],
+                ].map(([label, field]) => (
+                  <Input
+                    key={field}
+                    label={label}
+                    value={editForm[field]}
+                    onChange={(e) =>
+                      setEditForm({ ...editForm, [field]: e.target.value })
+                    }
+                  />
+                ))}
               </div>
             ) : (
               [
@@ -4111,7 +4749,7 @@ function PatientDetail({
   );
 }
 
-// ─── RECORDS PAGE —  CLÍNICO EDITABLE ───────────────────────────────
+// ─── RECORDS PAGE ─────────────────────────────────────────────────────────────
 function RecordsPage({
   visits,
   pets,
@@ -4131,20 +4769,16 @@ function RecordsPage({
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const fileInputRef = useRef(null);
 
-  const petsWithRecords = useMemo(() => {
-    return pets;
-  }, [pets]);
-
   const filtered = useMemo(() => {
-    if (!search) return petsWithRecords;
+    if (!search) return pets;
     const q = search.toLowerCase();
-    return petsWithRecords.filter(
+    return pets.filter(
       (p) =>
         p.name?.toLowerCase().includes(q) ||
         p.owner?.toLowerCase().includes(q) ||
         p.breed?.toLowerCase().includes(q)
     );
-  }, [petsWithRecords, search]);
+  }, [pets, search]);
 
   const selectedPet = pets.find((p) => p.id === selectedPetId);
   const petVisits = selectedPetId
@@ -4232,7 +4866,6 @@ function RecordsPage({
     padding: 18,
     marginBottom: 16,
   });
-
   const ItemActions = ({ onEdit, id }) => (
     <div style={{ display: "flex", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
       <button
@@ -4273,7 +4906,6 @@ function RecordsPage({
       className="fade-in"
       style={{ display: "flex", gap: 24, height: "calc(100vh - 64px)" }}
     >
-      {/* Edit modals */}
       {editingVisit && (
         <EditVisitModal
           visit={editingVisit}
@@ -4351,7 +4983,6 @@ function RecordsPage({
         </ModalWrap>
       )}
 
-      {/* ── LEFT: pet list ── */}
       <div
         style={{
           width: 280,
@@ -4427,8 +5058,8 @@ function RecordsPage({
                 fontSize: 13,
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>
-              Sin pacientes registrados aún.
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>Sin
+              pacientes registrados aún.
             </div>
           )}
           {filtered.map((p) => {
@@ -4511,7 +5142,6 @@ function RecordsPage({
         </div>
       </div>
 
-      {/* ── RIGHT: medical file ── */}
       <div style={{ flex: 1, overflowY: "auto" }}>
         {!selectedPet ? (
           <div
@@ -4534,7 +5164,6 @@ function RecordsPage({
           </div>
         ) : (
           <div className="fade-in">
-            {/* Header */}
             <Card
               style={{
                 marginBottom: 20,
@@ -4601,7 +5230,7 @@ function RecordsPage({
               </div>
             </Card>
 
-            {/* ── VACUNACIÓN ── */}
+            {/* Vacunación */}
             <div style={sectionStyle(C.accent)}>
               <div
                 style={{
@@ -4716,7 +5345,7 @@ function RecordsPage({
               )}
             </div>
 
-            {/* ── TRATAMIENTOS ── */}
+            {/* Tratamientos */}
             <div style={sectionStyle(C.info)}>
               <div
                 style={{
@@ -4810,18 +5439,6 @@ function RecordsPage({
                             id={v.id}
                           />
                         </div>
-                        {v.startDate && v.startDate !== v.date && (
-                          <div
-                            style={{
-                              fontSize: 12,
-                              color: C.info,
-                              fontWeight: 600,
-                              marginBottom: 6,
-                            }}
-                          >
-                            🗓 Inicio del tratamiento: {v.startDate}
-                          </div>
-                        )}
                         {v.diagnosis && (
                           <div
                             style={{
@@ -4910,7 +5527,7 @@ function RecordsPage({
               )}
             </div>
 
-            {/* ── CIRUGÍAS ── */}
+            {/* Cirugías */}
             <div style={sectionStyle(C.danger)}>
               <div
                 style={{
@@ -5035,21 +5652,12 @@ function RecordsPage({
                                 fontWeight: 700,
                                 color: C.warning,
                                 textTransform: "uppercase",
-                                letterSpacing: ".5px",
                                 marginBottom: 3,
                               }}
                             >
                               📋 Pre-operatorio
                             </div>
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: C.text,
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              {v.preopNotes}
-                            </div>
+                            <div style={{ fontSize: 13 }}>{v.preopNotes}</div>
                           </div>
                         )}
                         {v.postopNotes && (
@@ -5067,21 +5675,12 @@ function RecordsPage({
                                 fontWeight: 700,
                                 color: "#0f766e",
                                 textTransform: "uppercase",
-                                letterSpacing: ".5px",
                                 marginBottom: 3,
                               }}
                             >
                               ✅ Post-operatorio
                             </div>
-                            <div
-                              style={{
-                                fontSize: 13,
-                                color: C.text,
-                                lineHeight: 1.5,
-                              }}
-                            >
-                              {v.postopNotes}
-                            </div>
+                            <div style={{ fontSize: 13 }}>{v.postopNotes}</div>
                           </div>
                         )}
                       </div>
@@ -5090,7 +5689,7 @@ function RecordsPage({
               )}
             </div>
 
-            {/* ── CONSULTAS GENERALES ── */}
+            {/* Consultas generales */}
             <div style={sectionStyle(C.purple)}>
               <div
                 style={{
@@ -5201,7 +5800,7 @@ function RecordsPage({
               )}
             </div>
 
-            {/* ── RESULTADOS DE EXÁMENES ── */}
+            {/* Resultados */}
             <div style={sectionStyle("#6B7280")}>
               <div
                 style={{
@@ -5271,116 +5870,112 @@ function RecordsPage({
                     padding: "20px 0",
                   }}
                 >
-                  Sin documentos subidos. Carga PDFs o imágenes de resultados de
-                  exámenes.
+                  Sin documentos subidos.
                 </div>
               ) : (
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  {petResults.map((r, i) => {
-                    const isPdf = r.fileType === "application/pdf";
-                    const isImage = r.fileType?.startsWith("image/");
-                    return (
+                petResults.map((r, i) => {
+                  const isPdf = r.fileType === "application/pdf";
+                  const isImage = r.fileType?.startsWith("image/");
+                  return (
+                    <div
+                      key={i}
+                      style={{
+                        background: C.surface,
+                        borderRadius: 10,
+                        padding: "12px 16px",
+                        border: `1px solid ${C.border}`,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 14,
+                        marginBottom: 8,
+                      }}
+                    >
                       <div
-                        key={i}
                         style={{
-                          background: C.surface,
+                          width: 44,
+                          height: 44,
                           borderRadius: 10,
-                          padding: "12px 16px",
-                          border: `1px solid ${C.border}`,
+                          background: isPdf ? "#FF4D6D15" : "#4DA6FF15",
                           display: "flex",
                           alignItems: "center",
-                          gap: 14,
+                          justifyContent: "center",
+                          fontSize: 22,
+                          flexShrink: 0,
                         }}
                       >
+                        {isPdf ? "📄" : isImage ? "🖼️" : "📎"}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: 10,
-                            background: isPdf ? "#FF4D6D15" : "#4DA6FF15",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: 22,
-                            flexShrink: 0,
-                          }}
-                        >
-                          {isPdf ? "📄" : isImage ? "🖼️" : "📎"}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div
-                            style={{
-                              fontWeight: 600,
-                              fontSize: 13,
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {r.fileName}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: C.textMuted,
-                              marginTop: 2,
-                            }}
-                          >
-                            Subido: {r.uploadDate} · {r.fileSize}
-                          </div>
-                        </div>
-                        {isImage && (
-                          <img
-                            src={r.fileData}
-                            alt={r.fileName}
-                            style={{
-                              width: 48,
-                              height: 48,
-                              objectFit: "cover",
-                              borderRadius: 8,
-                              border: `1px solid ${C.border}`,
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                        <a
-                          href={r.fileData}
-                          download={r.fileName}
-                          style={{
-                            background: C.info + "15",
-                            color: C.info,
-                            border: `1px solid ${C.info}30`,
-                            borderRadius: 8,
-                            padding: "5px 12px",
-                            fontSize: 12,
-                            fontWeight: 700,
-                            textDecoration: "none",
-                            flexShrink: 0,
-                          }}
-                        >
-                          ⬇ Descargar
-                        </a>
-                        <button
-                          onClick={() => onDeleteResult(r.id)}
-                          style={{
-                            background: C.danger + "10",
-                            border: `1px solid ${C.danger}25`,
-                            borderRadius: 8,
-                            padding: "5px 8px",
-                            cursor: "pointer",
+                            fontWeight: 600,
                             fontSize: 13,
-                            color: C.danger,
-                            flexShrink: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
-                          🗑
-                        </button>
+                          {r.fileName}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: C.textMuted,
+                            marginTop: 2,
+                          }}
+                        >
+                          Subido: {r.uploadDate} · {r.fileSize}
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
+                      {isImage && (
+                        <img
+                          src={r.fileData}
+                          alt={r.fileName}
+                          style={{
+                            width: 48,
+                            height: 48,
+                            objectFit: "cover",
+                            borderRadius: 8,
+                            border: `1px solid ${C.border}`,
+                            flexShrink: 0,
+                          }}
+                        />
+                      )}
+                      <a
+                        href={r.fileData}
+                        download={r.fileName}
+                        style={{
+                          background: C.info + "15",
+                          color: C.info,
+                          border: `1px solid ${C.info}30`,
+                          borderRadius: 8,
+                          padding: "5px 12px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          textDecoration: "none",
+                          flexShrink: 0,
+                        }}
+                      >
+                        ⬇ Descargar
+                      </a>
+                      <button
+                        onClick={() => onDeleteResult(r.id)}
+                        style={{
+                          background: C.danger + "10",
+                          border: `1px solid ${C.danger}25`,
+                          borderRadius: 8,
+                          padding: "5px 8px",
+                          cursor: "pointer",
+                          fontSize: 13,
+                          color: C.danger,
+                          flexShrink: 0,
+                        }}
+                      >
+                        🗑
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           </div>
@@ -5390,7 +5985,7 @@ function RecordsPage({
   );
 }
 
-// ─── EDIT VISIT MODAL ─────────────────────────────────────────────────────────
+// ─── EDIT MODALS ──────────────────────────────────────────────────────────────
 function EditVisitModal({ visit, onClose, onSave }) {
   const [form, setForm] = useState({
     ...visit,
@@ -5400,7 +5995,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
     preopNotes: visit.preopNotes || "",
     postopNotes: visit.postopNotes || "",
   });
-
   const isTreatment =
     form.type?.toLowerCase().includes("tratamiento") ||
     form.type?.toLowerCase().includes("medicamento") ||
@@ -5410,7 +6004,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
     form.type?.toLowerCase().includes("cirugia") ||
     form.type?.toLowerCase().includes("operación") ||
     form.type?.toLowerCase().includes("operacion");
-
   const TextArea = ({ label, field, placeholder, rows = 2 }) => (
     <div style={{ marginBottom: 14 }}>
       <div
@@ -5445,7 +6038,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
       />
     </div>
   );
-
   return (
     <ModalWrap title="✏️ Editar Registro Médico" onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -5462,7 +6054,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
           placeholder="Ej: Tratamiento, Cirugía..."
         />
       </div>
-
       {isTreatment && (
         <Input
           label="🗓 Inicio del tratamiento"
@@ -5471,54 +6062,49 @@ function EditVisitModal({ visit, onClose, onSave }) {
           onChange={(e) => setForm({ ...form, startDate: e.target.value })}
         />
       )}
-
       <TextArea
         label="Diagnóstico / Notas"
         field="diagnosis"
         placeholder="Observaciones del veterinario..."
         rows={3}
       />
-
       {isTreatment && (
         <>
           <TextArea
             label="💊 Medicamentos prescritos"
             field="medications"
-            placeholder="Ej: Amoxicilina 250mg c/8h x 7 días, Ibuprofeno..."
+            placeholder="Ej: Amoxicilina 250mg c/8h x 7 días..."
           />
           <TextArea
             label="📌 Detalles importantes"
             field="details"
-            placeholder="Indicaciones especiales, reacciones, observaciones del tratamiento..."
+            placeholder="Indicaciones especiales..."
             rows={3}
           />
         </>
       )}
-
       {isSurgery && (
         <>
           <TextArea
             label="📋 Notas pre-operatorias"
             field="preopNotes"
-            placeholder="Preparación, ayuno, medicación previa..."
+            placeholder="Preparación, ayuno..."
           />
           <TextArea
             label="✅ Notas post-operatorias"
             field="postopNotes"
-            placeholder="Recuperación, cuidados, medicación posterior..."
+            placeholder="Recuperación, cuidados..."
           />
         </>
       )}
-
       {!isTreatment && !isSurgery && (
         <TextArea
           label="📝 Observaciones adicionales"
           field="details"
-          placeholder="Detalles adicionales de la consulta..."
+          placeholder="Detalles adicionales..."
           rows={2}
         />
       )}
-
       <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
         <button
           onClick={onClose}
@@ -5555,7 +6141,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
   );
 }
 
-// ─── EDIT VACCINE MODAL ───────────────────────────────────────────────────────
 function EditVaccineModal({ vaccine, onClose, onSave }) {
   const [form, setForm] = useState({ ...vaccine, notes: vaccine.notes || "" });
   return (
@@ -5564,7 +6149,7 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
         label="Nombre de la vacuna *"
         value={form.name}
         onChange={(e) => setForm({ ...form, name: e.target.value })}
-        placeholder="Ej: Triple Felina, Antirrábica..."
+        placeholder="Ej: Triple Felina..."
       />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Input
@@ -5689,7 +6274,7 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
   );
 }
 
-// ─── INVENTARIO MÉDICO ────────────────────────────────────────────────────────
+// ─── INVENTARIO ───────────────────────────────────────────────────────────────
 function InventarioPage({ inventory, onUpdate }) {
   const CATEGORIES = [
     "Vacunas",
@@ -5764,15 +6349,13 @@ function InventarioPage({ inventory, onUpdate }) {
   };
   const handleSave = async () => {
     if (!form.name || !form.quantity) return;
-    if (editItem) {
+    if (editItem)
       await onUpdate(
         inventory.map((i) =>
           i.id === editItem.id ? { ...editItem, ...form } : i
         )
       );
-    } else {
-      await onUpdate([{ ...form, id: "inv_" + uid() }, ...inventory]);
-    }
+    else await onUpdate([{ ...form, id: "inv_" + uid() }, ...inventory]);
     setShowModal(false);
     setEditItem(null);
   };
@@ -5799,7 +6382,6 @@ function InventarioPage({ inventory, onUpdate }) {
       className="fade-in"
       style={{ display: "flex", flexDirection: "column", gap: 20 }}
     >
-      {/* Add/Edit Modal */}
       {showModal && (
         <ModalWrap
           title={editItem ? "✏️ Editar Producto" : "📦 Agregar Producto"}
@@ -5910,7 +6492,7 @@ function InventarioPage({ inventory, onUpdate }) {
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={2}
-              placeholder="Proveedor, indicaciones, ubicación en almacén..."
+              placeholder="Proveedor, indicaciones..."
               style={{
                 width: "100%",
                 padding: "10px 14px",
@@ -6003,8 +6585,6 @@ function InventarioPage({ inventory, onUpdate }) {
           </div>
         </ModalWrap>
       )}
-
-      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -6043,8 +6623,6 @@ function InventarioPage({ inventory, onUpdate }) {
           + Agregar producto
         </button>
       </div>
-
-      {/* Alerts */}
       {(lowStock.length > 0 || expiredItems.length > 0) && (
         <div
           style={{
@@ -6134,8 +6712,6 @@ function InventarioPage({ inventory, onUpdate }) {
           )}
         </div>
       )}
-
-      {/* Category quick stats */}
       {catStats.length > 0 && (
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {catStats.map(({ cat, count }) => (
@@ -6178,8 +6754,6 @@ function InventarioPage({ inventory, onUpdate }) {
           ))}
         </div>
       )}
-
-      {/* Search + filter */}
       <div
         style={{
           display: "flex",
@@ -6238,8 +6812,6 @@ function InventarioPage({ inventory, onUpdate }) {
           ))}
         </div>
       </div>
-
-      {/* Items grid */}
       {filtered.length === 0 ? (
         <div
           style={{ textAlign: "center", padding: "60px 0", color: C.textMuted }}
@@ -6273,7 +6845,6 @@ function InventarioPage({ inventory, onUpdate }) {
             const minQty = parseInt(item.minStock) || 0;
             const pct =
               minQty > 0 ? Math.min(100, (qty / (minQty * 2)) * 100) : null;
-
             return (
               <div
                 key={item.id}
@@ -6290,7 +6861,6 @@ function InventarioPage({ inventory, onUpdate }) {
                   gap: 12,
                 }}
               >
-                {/* Top row */}
                 <div
                   style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
                 >
@@ -6354,8 +6924,6 @@ function InventarioPage({ inventory, onUpdate }) {
                     </button>
                   </div>
                 </div>
-
-                {/* Stock control */}
                 <div
                   style={{
                     background: isLow
@@ -6470,8 +7038,6 @@ function InventarioPage({ inventory, onUpdate }) {
                     </div>
                   )}
                 </div>
-
-                {/* Meta info */}
                 <div
                   style={{
                     display: "grid",
@@ -6542,8 +7108,6 @@ function InventarioPage({ inventory, onUpdate }) {
                     </div>
                   )}
                 </div>
-
-                {/* Alerts row */}
                 {(isLow || isExpired) && (
                   <div style={{ display: "flex", gap: 6 }}>
                     {isLow && (
@@ -6576,8 +7140,6 @@ function InventarioPage({ inventory, onUpdate }) {
                     )}
                   </div>
                 )}
-
-                {/* Notes */}
                 {item.notes && (
                   <div
                     style={{
