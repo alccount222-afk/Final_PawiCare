@@ -24,6 +24,19 @@ const auth = getAuth(firebaseApp);
 const db = getFirestore(firebaseApp);
 const uid = () => Math.random().toString(36).slice(2, 9);
 
+// ─── RESPONSIVE HOOK ──────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 // ─── CLOUD HELPERS ────────────────────────────────────────────────────────────
 const cloud = {
   async save(uid, key, data) {
@@ -190,22 +203,29 @@ const FONT = `
   @keyframes spin{to{transform:rotate(360deg);}}
   @keyframes shimmer{0%{background-position:-200% center;}100%{background-position:200% center;}}
   @keyframes ripple{0%{transform:scale(0);opacity:0.6;}100%{transform:scale(2.5);opacity:0;}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(100%);}to{opacity:1;transform:translateY(0);}}
   .fade-in{animation:fadeIn .35s ease forwards;}
   .badge-pulse{animation:pulse 2s infinite;}
   .spinner{width:20px;height:20px;border:2px solid ${C.border};border-top-color:${C.accent};border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
   .float-dog{animation:floatDog 3s ease-in-out infinite;}
+  @media(max-width:767px){
+    .desktop-only{display:none!important;}
+    .mobile-bottom-nav{display:flex!important;}
+  }
+  @media(min-width:768px){
+    .mobile-only{display:none!important;}
+    .mobile-bottom-nav{display:none!important;}
+  }
 `;
 
-// ─── PAWI DOG SVG ILLUSTRATION ────────────────────────────────────────────────
-// A friendly 3D-style cartoon dog with headset — 100% inline SVG
-function PawiDogIllustration() {
+// ─── PAWI DOG SVG ─────────────────────────────────────────────────────────────
+function PawiDogIllustration({ size = 200 }) {
   return (
     <svg
       viewBox="0 0 260 260"
       xmlns="http://www.w3.org/2000/svg"
-      style={{ width: 200, height: 200, display: "block", margin: "0 auto" }}
+      style={{ width: size, height: size, display: "block", margin: "0 auto" }}
     >
-      {/* ── Drop shadow ── */}
       <ellipse
         cx="130"
         cy="248"
@@ -214,8 +234,6 @@ function PawiDogIllustration() {
         fill="#00C49A"
         opacity="0.18"
       />
-
-      {/* ── Body ── */}
       <ellipse cx="130" cy="188" rx="52" ry="42" fill="url(#bodyGrad)" />
       <defs>
         <radialGradient id="bodyGrad" cx="40%" cy="35%" r="65%">
@@ -251,8 +269,6 @@ function PawiDogIllustration() {
           </feMerge>
         </filter>
       </defs>
-
-      {/* ── Left ear (floppy) ── */}
       <ellipse
         cx="89"
         cy="104"
@@ -270,8 +286,6 @@ function PawiDogIllustration() {
         opacity="0.4"
         transform="rotate(-18 89 108)"
       />
-
-      {/* ── Right ear (floppy) ── */}
       <ellipse
         cx="171"
         cy="104"
@@ -289,8 +303,6 @@ function PawiDogIllustration() {
         opacity="0.4"
         transform="rotate(18 171 108)"
       />
-
-      {/* ── Headset band ── */}
       <path
         d="M 85 96 Q 130 52 175 96"
         stroke="#1E293B"
@@ -306,9 +318,6 @@ function PawiDogIllustration() {
         strokeLinecap="round"
         opacity="0.6"
       />
-
-      {/* ── Headset ear cups ── */}
-      {/* Left cup */}
       <rect x="72" y="92" width="22" height="26" rx="11" fill="#00C49A" />
       <rect x="75" y="95" width="16" height="20" rx="8" fill="#00E5B0" />
       <rect
@@ -320,7 +329,6 @@ function PawiDogIllustration() {
         fill="#1E293B"
         opacity="0.15"
       />
-      {/* Right cup */}
       <rect x="166" y="92" width="22" height="26" rx="11" fill="#00C49A" />
       <rect x="169" y="95" width="16" height="20" rx="8" fill="#00E5B0" />
       <rect
@@ -332,8 +340,6 @@ function PawiDogIllustration() {
         fill="#1E293B"
         opacity="0.15"
       />
-
-      {/* ── Head ── */}
       <circle
         cx="130"
         cy="118"
@@ -341,8 +347,6 @@ function PawiDogIllustration() {
         fill="url(#headGrad)"
         filter="url(#softShadow)"
       />
-
-      {/* ── Head highlight ── */}
       <ellipse
         cx="116"
         cy="96"
@@ -352,17 +356,11 @@ function PawiDogIllustration() {
         opacity="0.22"
         transform="rotate(-15 116 96)"
       />
-
-      {/* ── Snout ── */}
       <ellipse cx="130" cy="136" rx="26" ry="20" fill="url(#snoutGrad)" />
       <ellipse cx="130" cy="136" rx="22" ry="16" fill="#FDF5E6" opacity="0.6" />
-
-      {/* ── Nose ── */}
       <ellipse cx="130" cy="128" rx="10" ry="7" fill="#2D1B0E" />
       <ellipse cx="126" cy="126" rx="4" ry="3" fill="white" opacity="0.55" />
       <ellipse cx="132" cy="129" rx="2" ry="1.5" fill="white" opacity="0.3" />
-
-      {/* ── Smile ── */}
       <path
         d="M 116 138 Q 130 152 144 138"
         stroke="#C4845A"
@@ -371,20 +369,14 @@ function PawiDogIllustration() {
         strokeLinecap="round"
         opacity="0.7"
       />
-
-      {/* ── Eyes ── */}
-      {/* Left eye */}
       <circle cx="112" cy="112" r="11" fill="#1E293B" />
       <circle cx="112" cy="112" r="8" fill="#2D4A3E" />
       <circle cx="114" cy="109" r="4" fill="white" opacity="0.9" />
       <circle cx="116" cy="110" r="2" fill="white" opacity="0.5" />
-      {/* Right eye */}
       <circle cx="148" cy="112" r="11" fill="#1E293B" />
       <circle cx="148" cy="112" r="8" fill="#2D4A3E" />
       <circle cx="150" cy="109" r="4" fill="white" opacity="0.9" />
       <circle cx="152" cy="110" r="2" fill="white" opacity="0.5" />
-
-      {/* ── Eyebrows (friendly raised) ── */}
       <path
         d="M 104 101 Q 112 97 120 101"
         stroke="#B8744A"
@@ -399,12 +391,8 @@ function PawiDogIllustration() {
         fill="none"
         strokeLinecap="round"
       />
-
-      {/* ── Cheek blush ── */}
       <ellipse cx="98" cy="128" rx="10" ry="7" fill="#FF9999" opacity="0.28" />
       <ellipse cx="162" cy="128" rx="10" ry="7" fill="#FF9999" opacity="0.28" />
-
-      {/* ── Microphone boom ── */}
       <path
         d="M 72 110 Q 55 125 58 148"
         stroke="#334155"
@@ -412,24 +400,17 @@ function PawiDogIllustration() {
         fill="none"
         strokeLinecap="round"
       />
-      {/* Mic head */}
       <rect x="48" y="143" width="20" height="12" rx="6" fill="#1E293B" />
       <rect x="50" y="145" width="16" height="8" rx="4" fill="#00C49A" />
-      {/* Mic dot */}
       <circle cx="58" cy="149" r="2.5" fill="white" opacity="0.7" />
-
-      {/* ── Paws on front ── */}
       <ellipse cx="100" cy="224" rx="20" ry="14" fill="#E8B87A" />
       <ellipse cx="160" cy="224" rx="20" ry="14" fill="#E8B87A" />
-      {/* Paw details */}
       <circle cx="96" cy="220" r="4" fill="#D4956B" opacity="0.5" />
       <circle cx="104" cy="218" r="4" fill="#D4956B" opacity="0.5" />
       <circle cx="100" cy="228" r="4" fill="#D4956B" opacity="0.5" />
       <circle cx="156" cy="220" r="4" fill="#D4956B" opacity="0.5" />
       <circle cx="164" cy="218" r="4" fill="#D4956B" opacity="0.5" />
       <circle cx="160" cy="228" r="4" fill="#D4956B" opacity="0.5" />
-
-      {/* ── Tail ── */}
       <path
         d="M 178 200 Q 210 170 202 148 Q 196 132 183 140"
         stroke="#E8B87A"
@@ -445,8 +426,6 @@ function PawiDogIllustration() {
         strokeLinecap="round"
         opacity="0.6"
       />
-
-      {/* ── Pawi logo badge ── */}
       <circle cx="130" cy="182" r="16" fill="#00C49A" filter="url(#glow)" />
       <circle cx="130" cy="182" r="13" fill="#00E5B0" />
       <text
@@ -464,8 +443,9 @@ function PawiDogIllustration() {
   );
 }
 
-// ─── WELCOME MODAL (PAWI) ─────────────────────────────────────────────────────
+// ─── WELCOME MODAL ────────────────────────────────────────────────────────────
 function WelcomeModal({ authUser, profile, onComplete }) {
+  const isMobile = useIsMobile();
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -480,26 +460,16 @@ function WelcomeModal({ authUser, profile, onComplete }) {
     setSaving(true);
     setError("");
     try {
-      // Save phone to Firestore profile
       await cloud.save(authUser.uid, "profile", {
         ...(profile || {}),
         phone: cleaned,
         welcomeCompleted: true,
       });
     } catch (e) {
-      console.error("Error guardando teléfono:", e);
+      console.error(e);
     }
     setSaving(false);
     onComplete(cleaned);
-  };
-
-  const handleSkip = () => {
-    onComplete(null);
-  };
-
-  const triggerRipple = () => {
-    setRipple(true);
-    setTimeout(() => setRipple(false), 600);
   };
 
   return (
@@ -509,61 +479,53 @@ function WelcomeModal({ authUser, profile, onComplete }) {
         inset: 0,
         zIndex: 9999,
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
-        // Blurred + tinted backdrop — cannot click through
-        background: "rgba(10, 30, 26, 0.55)",
+        background: "rgba(10,30,26,0.55)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
       }}
     >
-      {/* ── Animated background circles ── */}
-      <div
-        style={{
-          position: "absolute",
-          width: 500,
-          height: 500,
-          borderRadius: "50%",
-          background: "radial-gradient(circle, #00D4A015 0%, transparent 70%)",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          animation: "floatDog 6s ease-in-out infinite",
-          pointerEvents: "none",
-        }}
-      />
-
-      {/* ── Modal card ── */}
       <div
         style={{
           position: "relative",
           background: "#FFFFFF",
-          borderRadius: 28,
-          width: "min(520px, 94vw)",
-          maxHeight: "94vh",
+          borderRadius: isMobile ? "24px 24px 0 0" : 28,
+          width: isMobile ? "100%" : "min(520px,94vw)",
+          maxHeight: isMobile ? "92vh" : "94vh",
           overflowY: "auto",
           boxShadow:
-            "0 32px 80px rgba(0,180,130,0.18), 0 8px 32px rgba(0,0,0,0.14)",
+            "0 32px 80px rgba(0,180,130,0.18),0 8px 32px rgba(0,0,0,0.14)",
           border: "1.5px solid #E0F7F2",
-          animation:
-            "fadeInScale 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) both",
+          animation: isMobile
+            ? "slideUp 0.4s cubic-bezier(0.175,0.885,0.32,1.275) both"
+            : "fadeInScale 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both",
         }}
       >
-        {/* ── Top accent strip ── */}
         <div
           style={{
             height: 6,
             background:
-              "linear-gradient(90deg, #00D4A0, #00B386, #4DA6FF, #00D4A0)",
+              "linear-gradient(90deg,#00D4A0,#00B386,#4DA6FF,#00D4A0)",
             backgroundSize: "200% auto",
             animation: "shimmer 3s linear infinite",
-            borderRadius: "28px 28px 0 0",
+            borderRadius: isMobile ? "24px 24px 0 0" : "28px 28px 0 0",
           }}
         />
-
-        {/* ── Content ── */}
-        <div style={{ padding: "32px 40px 36px" }}>
-          {/* ── Dog illustration ── */}
+        {isMobile && (
+          <div
+            style={{
+              width: 40,
+              height: 4,
+              background: C.border,
+              borderRadius: 2,
+              margin: "12px auto 0",
+            }}
+          />
+        )}
+        <div
+          style={{ padding: isMobile ? "20px 24px 32px" : "32px 40px 36px" }}
+        >
           <div
             className="float-dog"
             style={{
@@ -571,10 +533,8 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               filter: "drop-shadow(0 8px 24px rgba(0,180,130,0.22))",
             }}
           >
-            <PawiDogIllustration />
+            <PawiDogIllustration size={isMobile ? 140 : 200} />
           </div>
-
-          {/* ── Pawi badge ── */}
           <div
             style={{
               display: "flex",
@@ -586,7 +546,7 @@ function WelcomeModal({ authUser, profile, onComplete }) {
           >
             <div
               style={{
-                background: "linear-gradient(135deg, #00D4A015, #4DA6FF10)",
+                background: "linear-gradient(135deg,#00D4A015,#4DA6FF10)",
                 border: "1.5px solid #00D4A040",
                 borderRadius: 100,
                 padding: "5px 16px",
@@ -600,12 +560,10 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               🐾 Pawi · Plataforma Veterinaria
             </div>
           </div>
-
-          {/* ── Headline ── */}
           <h1
             style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 26,
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 22 : 26,
               fontWeight: 700,
               color: "#1E293B",
               textAlign: "center",
@@ -616,8 +574,6 @@ function WelcomeModal({ authUser, profile, onComplete }) {
             ¡Bienvenido a la comunidad Pawi!
             <span style={{ display: "block", fontSize: 22 }}>🐾</span>
           </h1>
-
-          {/* ── Subtitle ── */}
           <p
             style={{
               fontSize: 14,
@@ -633,11 +589,9 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               Déjanos tu número para:
             </strong>
           </p>
-
-          {/* ── Benefit list ── */}
           <div
             style={{
-              background: "linear-gradient(135deg, #F0FDF9, #EFF9FF)",
+              background: "linear-gradient(135deg,#F0FDF9,#EFF9FF)",
               border: "1.5px solid #D1FAF0",
               borderRadius: 16,
               padding: "16px 20px",
@@ -688,8 +642,6 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               </div>
             ))}
           </div>
-
-          {/* ── Phone input ── */}
           <div style={{ marginBottom: 10, position: "relative" }}>
             <div
               style={{
@@ -707,18 +659,12 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               type="tel"
               value={phone}
               onChange={(e) => {
-                // 1. Filtramos para dejar solo números
                 const val = e.target.value.replace(/\D/g, "");
-
-                // 2. Si el primer número no es 9, no actualizamos el estado
                 if (val.length > 0 && val[0] !== "9") {
-                  setError("El número de celular debe empezar con 9");
+                  setError("El número debe empezar con 9");
                   return;
                 }
-
-                // 3. Si tiene más de 9 dígitos, ignoramos la entrada adicional
                 if (val.length > 9) return;
-
                 setPhone(val);
                 setError("");
               }}
@@ -729,27 +675,16 @@ function WelcomeModal({ authUser, profile, onComplete }) {
                 width: "100%",
                 padding: "14px 18px 14px 50px",
                 background: "#F8FAFC",
-                border: `2px solid ${
-                  error ? C.danger : phone.length > 9 ? "#00D4A0" : "#E2E8F0"
-                }`,
+                border: `2px solid ${error ? C.danger : "#E2E8F0"}`,
                 borderRadius: 14,
                 color: "#1E293B",
                 fontSize: 15,
                 outline: "none",
                 fontFamily: "inherit",
-                transition: "border-color .2s",
                 letterSpacing: "0.5px",
-              }}
-              onFocus={(e) => {
-                if (!error) e.target.style.borderColor = "#00D4A0";
-              }}
-              onBlur={(e) => {
-                if (!error && phone.length <= 5)
-                  e.target.style.borderColor = "#E2E8F0";
               }}
             />
           </div>
-
           {error && (
             <div
               style={{
@@ -760,16 +695,11 @@ function WelcomeModal({ authUser, profile, onComplete }) {
                 fontSize: 13,
                 color: C.danger,
                 marginBottom: 10,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
               }}
             >
               ⚠️ {error}
             </div>
           )}
-
-          {/* ── CTA Button ── */}
           <div
             style={{
               position: "relative",
@@ -780,7 +710,8 @@ function WelcomeModal({ authUser, profile, onComplete }) {
           >
             <button
               onClick={() => {
-                triggerRipple();
+                setRipple(true);
+                setTimeout(() => setRipple(false), 600);
                 handleSubmit();
               }}
               disabled={saving}
@@ -789,32 +720,17 @@ function WelcomeModal({ authUser, profile, onComplete }) {
                 padding: "15px",
                 background: saving
                   ? "#94A3B8"
-                  : "linear-gradient(135deg, #00D4A0, #00B386)",
+                  : "linear-gradient(135deg,#00D4A0,#00B386)",
                 color: "#fff",
                 border: "none",
                 borderRadius: 14,
                 fontWeight: 800,
                 fontSize: 16,
                 cursor: saving ? "default" : "pointer",
-                letterSpacing: "0.4px",
                 fontFamily: "inherit",
-                transition: "all .2s",
                 boxShadow: saving ? "none" : "0 4px 20px rgba(0,180,130,0.35)",
-                transform: saving ? "none" : "translateY(0)",
                 position: "relative",
                 zIndex: 1,
-              }}
-              onMouseEnter={(e) => {
-                if (!saving) {
-                  e.currentTarget.style.transform = "translateY(-2px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 8px 28px rgba(0,180,130,0.45)";
-                }
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow =
-                  "0 4px 20px rgba(0,180,130,0.35)";
               }}
             >
               {saving ? (
@@ -839,7 +755,6 @@ function WelcomeModal({ authUser, profile, onComplete }) {
                 "🚀 Comenzar"
               )}
             </button>
-            {/* Ripple effect */}
             {ripple && (
               <div
                 style={{
@@ -850,7 +765,7 @@ function WelcomeModal({ authUser, profile, onComplete }) {
                   height: 60,
                   borderRadius: "50%",
                   background: "rgba(255,255,255,0.4)",
-                  transform: "translate(-50%, -50%)",
+                  transform: "translate(-50%,-50%)",
                   animation: "ripple 0.6s ease-out forwards",
                   pointerEvents: "none",
                   zIndex: 0,
@@ -858,8 +773,6 @@ function WelcomeModal({ authUser, profile, onComplete }) {
               />
             )}
           </div>
-
-          {/* ── Privacy note ── */}
           <p
             style={{
               textAlign: "center",
@@ -955,6 +868,7 @@ function Input({ label, ...props }) {
 
 // ─── AUTH SCREEN ──────────────────────────────────────────────────────────────
 function AuthScreen({ onAuth }) {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({
     name: "",
@@ -977,7 +891,6 @@ function AuthScreen({ onAuth }) {
           form.email,
           form.password
         );
-        // isNew = false for login
         onAuth(cred.user, false);
       } else if (mode === "register") {
         const cred = await createUserWithEmailAndPassword(
@@ -999,7 +912,6 @@ function AuthScreen({ onAuth }) {
         await cloud.save(cred.user.uid, "appointments", SEED_APPOINTMENTS);
         await cloud.save(cred.user.uid, "inventory", SEED_INVENTORY);
         sendRegistrationEmail(form.name, form.clinic, form.email);
-        // isNew = TRUE → triggers welcome modal
         onAuth(cred.user, true);
       } else if (mode === "forgot") {
         await sendPasswordResetEmail(auth, form.email);
@@ -1026,6 +938,416 @@ function AuthScreen({ onAuth }) {
     setResetSent(false);
   };
 
+  // ── MOBILE LAYOUT ──
+  if (isMobile) {
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background:
+            "linear-gradient(160deg,#F0FDF4 0%,#E0F2FE 60%,#F0FDF4 100%)",
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        {/* Mobile Header */}
+        <div style={{ padding: "32px 24px 24px", textAlign: "center" }}>
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: C.accent + "20",
+              border: `1px solid ${C.accent}40`,
+              borderRadius: 100,
+              padding: "6px 16px",
+              fontSize: 12,
+              fontWeight: 700,
+              color: "#0f766e",
+              marginBottom: 16,
+            }}
+          >
+            🐾 Pawi · VetCare Pro
+          </div>
+          <div
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: 28,
+              lineHeight: 1.2,
+              color: "#1E293B",
+              marginBottom: 8,
+              fontWeight: 700,
+            }}
+          >
+            La plataforma
+            <br />
+            <span style={{ color: "#00b386" }}>veterinaria gratis</span>
+          </div>
+          <p
+            style={{
+              fontSize: 13,
+              color: "#475569",
+              lineHeight: 1.6,
+              marginBottom: 16,
+            }}
+          >
+            Gestiona pacientes, citas e historial clínico desde tu celular o
+            computadora.
+          </p>
+          {/* FREE Badge */}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              background: "linear-gradient(135deg,#00D4A0,#00B386)",
+              borderRadius: 100,
+              padding: "8px 20px",
+              fontSize: 14,
+              fontWeight: 800,
+              color: "#fff",
+              boxShadow: "0 4px 16px rgba(0,180,130,0.35)",
+              marginBottom: 8,
+            }}
+          >
+            🎉 ¡Completamente GRATIS!
+          </div>
+          <div
+            style={{
+              display: "flex",
+              gap: 8,
+              justifyContent: "center",
+              flexWrap: "wrap",
+              marginTop: 8,
+            }}
+          >
+            {[
+              "☁️ Datos en la nube",
+              "📋 Historial clínico",
+              "💉 Control de vacunas",
+              "🔒 Recupera tu cuenta",
+            ].map((f) => (
+              <span
+                key={f}
+                style={{
+                  background: "white",
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 100,
+                  padding: "4px 12px",
+                  fontSize: 11,
+                  color: "#475569",
+                  fontWeight: 600,
+                }}
+              >
+                {f}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Form Card */}
+        <div
+          style={{
+            flex: 1,
+            background: C.surface,
+            borderRadius: "24px 24px 0 0",
+            padding: "28px 24px 40px",
+            boxShadow: "0 -4px 24px rgba(0,0,0,0.08)",
+          }}
+        >
+          {/* Tab switcher */}
+          {mode !== "forgot" && (
+            <div
+              style={{
+                display: "flex",
+                background: C.bg,
+                borderRadius: 12,
+                padding: 4,
+                gap: 4,
+                marginBottom: 24,
+              }}
+            >
+              {[
+                ["login", "Iniciar sesión"],
+                ["register", "Registrarse"],
+              ].map(([m, label]) => (
+                <button
+                  key={m}
+                  onClick={() => switchMode(m)}
+                  style={{
+                    flex: 1,
+                    padding: "10px",
+                    borderRadius: 9,
+                    border: "none",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    fontSize: 14,
+                    background: mode === m ? C.surface : "transparent",
+                    color: mode === m ? C.text : C.textMuted,
+                    boxShadow:
+                      mode === m ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+                    transition: "all .15s",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {mode === "forgot" && (
+            <>
+              <button
+                onClick={() => switchMode("login")}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  color: C.textMuted,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  marginBottom: 20,
+                  padding: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                ← Volver al inicio de sesión
+              </button>
+              {resetSent ? (
+                <div style={{ textAlign: "center", padding: "24px 0" }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>📧</div>
+                  <div
+                    style={{
+                      fontFamily: "'Playfair Display',serif",
+                      fontSize: 22,
+                      fontWeight: 700,
+                      marginBottom: 10,
+                    }}
+                  >
+                    ¡Correo enviado!
+                  </div>
+                  <p
+                    style={{
+                      color: C.textMuted,
+                      fontSize: 14,
+                      lineHeight: 1.6,
+                      marginBottom: 20,
+                    }}
+                  >
+                    Revisa tu bandeja en <strong>{form.email}</strong>. Haz clic
+                    en el enlace para restablecer tu contraseña.
+                  </p>
+                  <button
+                    onClick={() => switchMode("login")}
+                    style={{
+                      width: "100%",
+                      padding: 14,
+                      background: C.accent,
+                      color: "#1E293B",
+                      border: "none",
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      fontSize: 15,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    Volver al inicio de sesión
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div
+                    style={{
+                      fontFamily: "'Playfair Display',serif",
+                      fontSize: 24,
+                      fontWeight: 700,
+                      marginBottom: 8,
+                    }}
+                  >
+                    Recuperar contraseña
+                  </div>
+                  <p
+                    style={{
+                      color: C.textMuted,
+                      fontSize: 13,
+                      marginBottom: 24,
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    Ingresa tu correo y te enviaremos un enlace para restablecer
+                    tu contraseña.
+                  </p>
+                  {error && (
+                    <div
+                      style={{
+                        background: "#FF4D6D15",
+                        color: C.danger,
+                        border: `1px solid ${C.danger}30`,
+                        borderRadius: 8,
+                        padding: "10px 14px",
+                        fontSize: 13,
+                        marginBottom: 16,
+                      }}
+                    >
+                      ⚠️ {error}
+                    </div>
+                  )}
+                  <form onSubmit={handleSubmit}>
+                    <Input
+                      label="Correo electrónico"
+                      type="email"
+                      required
+                      placeholder="vet@clinica.com"
+                      value={form.email}
+                      onChange={(e) =>
+                        setForm({ ...form, email: e.target.value })
+                      }
+                    />
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      style={{
+                        width: "100%",
+                        padding: 14,
+                        background: C.accent,
+                        color: "#1E293B",
+                        border: "none",
+                        borderRadius: 12,
+                        fontWeight: 700,
+                        fontSize: 15,
+                        cursor: "pointer",
+                        opacity: loading ? 0.7 : 1,
+                        fontFamily: "inherit",
+                      }}
+                    >
+                      {loading
+                        ? "Enviando..."
+                        : "Enviar enlace de recuperación"}
+                    </button>
+                  </form>
+                </>
+              )}
+            </>
+          )}
+
+          {mode !== "forgot" && (
+            <>
+              {error && (
+                <div
+                  style={{
+                    background: "#FF4D6D15",
+                    color: C.danger,
+                    border: `1px solid ${C.danger}30`,
+                    borderRadius: 10,
+                    padding: "10px 14px",
+                    fontSize: 13,
+                    marginBottom: 16,
+                  }}
+                >
+                  ⚠️ {error}
+                </div>
+              )}
+              <form onSubmit={handleSubmit}>
+                {mode === "register" && (
+                  <>
+                    <Input
+                      label="Tu nombre"
+                      required
+                      placeholder="Dr. García"
+                      value={form.name}
+                      onChange={(e) =>
+                        setForm({ ...form, name: e.target.value })
+                      }
+                    />
+                    <Input
+                      label="Nombre de la clínica"
+                      required
+                      placeholder="Clínica Veterinaria..."
+                      value={form.clinic}
+                      onChange={(e) =>
+                        setForm({ ...form, clinic: e.target.value })
+                      }
+                    />
+                  </>
+                )}
+                <Input
+                  label="Correo electrónico"
+                  type="email"
+                  required
+                  placeholder="vet@clinica.com"
+                  value={form.email}
+                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                />
+                <div style={{ position: "relative" }}>
+                  <Input
+                    label="Contraseña"
+                    type="password"
+                    required
+                    placeholder="Mínimo 6 caracteres"
+                    value={form.password}
+                    onChange={(e) =>
+                      setForm({ ...form, password: e.target.value })
+                    }
+                  />
+                  {mode === "login" && (
+                    <button
+                      type="button"
+                      onClick={() => switchMode("forgot")}
+                      style={{
+                        position: "absolute",
+                        right: 0,
+                        top: 0,
+                        background: "transparent",
+                        border: "none",
+                        cursor: "pointer",
+                        color: "#00b386",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        padding: 0,
+                      }}
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: "100%",
+                    padding: 14,
+                    background: C.accent,
+                    color: "#1E293B",
+                    border: "none",
+                    borderRadius: 12,
+                    fontWeight: 700,
+                    fontSize: 15,
+                    cursor: "pointer",
+                    marginTop: 4,
+                    opacity: loading ? 0.7 : 1,
+                    fontFamily: "inherit",
+                    boxShadow: "0 4px 16px rgba(0,180,130,0.3)",
+                  }}
+                >
+                  {loading
+                    ? "Cargando..."
+                    : mode === "login"
+                    ? "Entrar al panel"
+                    : "Crear cuenta gratis"}
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── DESKTOP LAYOUT (original) ──
   return (
     <div
       style={{
@@ -1034,10 +1356,10 @@ function AuthScreen({ onAuth }) {
         gridTemplateColumns: "1fr 1fr",
       }}
     >
-      {/* ── HERO ── */}
+      {/* HERO */}
       <div
         style={{
-          background: `linear-gradient(135deg, #F0FDF4, #E0F2FE)`,
+          background: "linear-gradient(135deg,#F0FDF4,#E0F2FE)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
@@ -1058,15 +1380,36 @@ function AuthScreen({ onAuth }) {
             fontSize: 12,
             fontWeight: 700,
             color: "#0f766e",
-            marginBottom: 32,
+            marginBottom: 24,
             width: "fit-content",
           }}
         >
-          🐾 MVP · VetCare Pro
+          🐾 Pawi · VetCare Pro
         </div>
+
+        {/* FREE badge — prominente */}
         <div
           style={{
-            fontFamily: "'Playfair Display', serif",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            background: "linear-gradient(135deg,#00D4A0,#00B386)",
+            borderRadius: 100,
+            padding: "10px 22px",
+            fontSize: 15,
+            fontWeight: 800,
+            color: "#fff",
+            boxShadow: "0 6px 24px rgba(0,180,130,0.4)",
+            marginBottom: 20,
+            width: "fit-content",
+          }}
+        >
+          🎉 ¡Completamente GRATIS para siempre!
+        </div>
+
+        <div
+          style={{
+            fontFamily: "'Playfair Display',serif",
             fontSize: 48,
             lineHeight: 1.1,
             marginBottom: 20,
@@ -1085,7 +1428,7 @@ function AuthScreen({ onAuth }) {
             maxWidth: 360,
           }}
         >
-          Gestiona pacientes, citas, e historial clínico. Datos guardados en la
+          Gestiona pacientes, citas e historial clínico. Datos guardados en la
           nube — accesibles desde cualquier dispositivo.
         </p>
         <div
@@ -1101,6 +1444,7 @@ function AuthScreen({ onAuth }) {
             ["📋", "Historial clínico completo por paciente"],
             ["💉", "Control de vacunas y alertas automáticas"],
             ["🔒", "Contraseña recuperable en cualquier momento"],
+            ["📱", "Funciona en celular y computadora"],
           ].map(([icon, text]) => (
             <div
               key={text}
@@ -1132,7 +1476,7 @@ function AuthScreen({ onAuth }) {
         </div>
       </div>
 
-      {/* ── FORM SIDE ── */}
+      {/* FORM */}
       <div
         style={{
           display: "flex",
@@ -1168,7 +1512,7 @@ function AuthScreen({ onAuth }) {
                   <div style={{ fontSize: 56, marginBottom: 16 }}>📧</div>
                   <div
                     style={{
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Playfair Display',serif",
                       fontSize: 24,
                       fontWeight: 700,
                       marginBottom: 12,
@@ -1184,9 +1528,7 @@ function AuthScreen({ onAuth }) {
                       marginBottom: 24,
                     }}
                   >
-                    Revisa tu bandeja de entrada en{" "}
-                    <strong>{form.email}</strong>. Haz clic en el enlace del
-                    correo para restablecer tu contraseña.
+                    Revisa tu bandeja en <strong>{form.email}</strong>.
                   </p>
                   <div
                     style={{
@@ -1200,8 +1542,7 @@ function AuthScreen({ onAuth }) {
                       textAlign: "left",
                     }}
                   >
-                    💡 Si no lo ves, revisa tu carpeta de{" "}
-                    <strong>spam o correo no deseado</strong>.
+                    💡 Si no lo ves, revisa tu carpeta de <strong>spam</strong>.
                   </div>
                   <button
                     onClick={() => switchMode("login")}
@@ -1215,6 +1556,7 @@ function AuthScreen({ onAuth }) {
                       fontWeight: 700,
                       fontSize: 15,
                       cursor: "pointer",
+                      fontFamily: "inherit",
                     }}
                   >
                     Volver al inicio de sesión
@@ -1224,7 +1566,7 @@ function AuthScreen({ onAuth }) {
                 <>
                   <div
                     style={{
-                      fontFamily: "'Playfair Display', serif",
+                      fontFamily: "'Playfair Display',serif",
                       fontSize: 28,
                       fontWeight: 700,
                       marginBottom: 8,
@@ -1283,6 +1625,7 @@ function AuthScreen({ onAuth }) {
                         fontSize: 15,
                         cursor: "pointer",
                         opacity: loading ? 0.7 : 1,
+                        fontFamily: "inherit",
                       }}
                     >
                       {loading
@@ -1294,23 +1637,24 @@ function AuthScreen({ onAuth }) {
               )}
             </>
           )}
-
           {mode !== "forgot" && (
             <>
               <div
                 style={{
-                  fontFamily: "'Playfair Display', serif",
+                  fontFamily: "'Playfair Display',serif",
                   fontSize: 30,
                   fontWeight: 700,
                   marginBottom: 8,
                 }}
               >
-                {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta"}
+                {mode === "login"
+                  ? "Bienvenido de vuelta"
+                  : "Crear cuenta gratis"}
               </div>
               <p style={{ color: C.textMuted, fontSize: 14, marginBottom: 28 }}>
                 {mode === "login"
                   ? "Ingresa con tu correo para acceder a tus datos"
-                  : "Regístrate — tus datos quedan seguros"}
+                  : "Regístrate gratis — tus datos quedan seguros"}
               </p>
               {error && (
                 <div
@@ -1405,13 +1749,14 @@ function AuthScreen({ onAuth }) {
                     cursor: "pointer",
                     marginTop: 4,
                     opacity: loading ? 0.7 : 1,
+                    fontFamily: "inherit",
                   }}
                 >
                   {loading
                     ? "Cargando..."
                     : mode === "login"
                     ? "Entrar al panel"
-                    : "Crear cuenta"}
+                    : "Crear cuenta gratis"}
                 </button>
               </form>
               <div
@@ -1448,6 +1793,7 @@ function AuthScreen({ onAuth }) {
 
 // ─── MAIN PLATFORM ────────────────────────────────────────────────────────────
 export default function VetPlatform() {
+  const isMobile = useIsMobile();
   const [authUser, setAuthUser] = useState(undefined);
   const [profile, setProfile] = useState(null);
   const [page, setPage] = useState("dashboard");
@@ -1456,8 +1802,8 @@ export default function VetPlatform() {
   const [saving, setSaving] = useState(false);
   const [results, setResults] = useState([]);
   const [aptPrefill, setAptPrefill] = useState(null);
-  // ── NEW: Welcome modal state ──
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [pets, setPets] = useState([]);
   const [visits, setVisits] = useState([]);
@@ -1483,20 +1829,24 @@ export default function VetPlatform() {
     return unsub;
   }, []);
 
-  // ── MODIFIED: accept isNew flag ──
   const handleAuth = useCallback((user, isNew = false) => {
     setAuthUser(user);
-    if (isNew) {
-      setShowWelcomeModal(true);
-    }
+    if (isNew) setShowWelcomeModal(true);
   }, []);
 
   const handleWelcomeComplete = useCallback(
     async (phone) => {
-      if (phone && authUser) {
-        // Reload profile to reflect saved phone
+      if (authUser) {
+        // Volvemos a cargar todo ahora que los datos de prueba ya se terminaron de guardar
         const data = await cloud.loadAll(authUser.uid);
         if (data.profile) setProfile(data.profile);
+
+        // ¡Agregamos estas líneas para que React actualice la vista con las mascotas y citas!
+        setPets(data.pets);
+        setVisits(data.visits);
+        setVaccines(data.vaccines);
+        setAppointments(data.appointments);
+        setInventory(data.inventory);
       }
       setShowWelcomeModal(false);
     },
@@ -1557,7 +1907,6 @@ export default function VetPlatform() {
     return (
       <>
         <style>{FONT}</style>
-        {/* Pass handleAuth which accepts isNew flag */}
         <AuthScreen onAuth={handleAuth} />
       </>
     );
@@ -1582,15 +1931,9 @@ export default function VetPlatform() {
     (a) => a.date === todayDate
   ).length;
   const internados = pets.filter((p) => p.status === "Internado");
-
   const stats = [
     { label: "Pacientes", value: pets.length, icon: "🏥", color: C.accent },
-    {
-      label: "Citas programadas hoy",
-      value: todayAppointments,
-      icon: "📅",
-      color: C.info,
-    },
+    { label: "Citas hoy", value: todayAppointments, icon: "📅", color: C.info },
     {
       label: "Internados",
       value: internados.length,
@@ -1599,11 +1942,16 @@ export default function VetPlatform() {
     },
   ];
 
+  const navigateTo = (key) => {
+    setPage(key);
+    setSelectedPet(null);
+    setSidebarOpen(false);
+  };
+
   return (
     <>
       <style>{FONT}</style>
 
-      {/* ── WELCOME MODAL — renders on top of everything ── */}
       {showWelcomeModal && (
         <WelcomeModal
           authUser={authUser}
@@ -1612,6 +1960,7 @@ export default function VetPlatform() {
         />
       )}
 
+      {/* ── MODALS ── */}
       {showModal === "new-appointment" && (
         <NewAppointmentModal
           pets={pets}
@@ -1679,37 +2028,216 @@ export default function VetPlatform() {
       )}
 
       <div style={{ display: "flex", minHeight: "100vh", background: C.bg }}>
-        {/* ── SIDEBAR ── */}
-        <div
-          style={{
-            width: 220,
-            background: C.surface,
-            borderRight: `1px solid ${C.border}`,
-            display: "flex",
-            flexDirection: "column",
-            padding: "24px 0",
-            position: "fixed",
-            height: "100vh",
-            zIndex: 10,
-          }}
-        >
+        {/* ── DESKTOP SIDEBAR ── */}
+        {!isMobile && (
           <div
             style={{
-              padding: "0 20px 24px",
-              borderBottom: `1px solid ${C.border}`,
+              width: 220,
+              background: C.surface,
+              borderRight: `1px solid ${C.border}`,
+              display: "flex",
+              flexDirection: "column",
+              padding: "24px 0",
+              position: "fixed",
+              height: "100vh",
+              zIndex: 10,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                padding: "0 20px 24px",
+                borderBottom: `1px solid ${C.border}`,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
+                    background: C.accent,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 18,
+                  }}
+                >
+                  🐾
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontFamily: "'Playfair Display',serif",
+                      fontSize: 16,
+                      fontWeight: 700,
+                    }}
+                  >
+                    VetCare
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 10,
+                      color: C.textMuted,
+                      letterSpacing: ".5px",
+                    }}
+                  >
+                    MVP PLATFORM
+                  </div>
+                </div>
+              </div>
+            </div>
+            <nav style={{ flex: 1, padding: "16px 12px" }}>
+              {MENU.map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => navigateTo(item.key)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: 10,
+                    border: "none",
+                    cursor: "pointer",
+                    background: page === item.key ? C.accentDim : "transparent",
+                    color: page === item.key ? "#0f766e" : C.textMuted,
+                    fontSize: 14,
+                    fontWeight: page === item.key ? 700 : 500,
+                    marginBottom: 2,
+                    transition: "all .15s",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{item.icon}</span>
+                  {item.label}
+                  {item.badge > 0 && (
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        background: C.danger,
+                        color: "#fff",
+                        borderRadius: "50%",
+                        width: 18,
+                        height: 18,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        fontWeight: 700,
+                      }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+            <div
+              style={{
+                padding: "12px 16px",
+                borderTop: `1px solid ${C.border}`,
+              }}
+            >
               <div
                 style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  fontSize: 11,
+                  color: saving ? C.warning : "#00b386",
+                  marginBottom: 12,
+                  fontWeight: 600,
+                }}
+              >
+                <div
+                  style={{
+                    width: 7,
+                    height: 7,
+                    borderRadius: "50%",
+                    background: saving ? C.warning : "#00b386",
+                    animation: "pulse 2s infinite",
+                  }}
+                />
+                {saving ? "Guardando..." : "Sincronizado ☁️"}
+              </div>
+              <button
+                onClick={() =>
+                  exportData(
+                    profile,
+                    pets,
+                    visits,
+                    vaccines,
+                    appointments,
+                    inventory
+                  )
+                }
+                style={{
+                  width: "100%",
+                  padding: "7px",
+                  background: "#F1F5F9",
+                  color: C.text,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  marginBottom: 6,
+                  fontFamily: "inherit",
+                }}
+              >
+                ⬇ Exportar mis datos
+              </button>
+              <button
+                onClick={() => signOut(auth)}
+                style={{
+                  width: "100%",
+                  padding: "7px",
+                  background: "transparent",
+                  color: C.textMuted,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  fontFamily: "inherit",
+                }}
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── MOBILE TOP BAR ── */}
+        {isMobile && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              zIndex: 50,
+              background: C.surface,
+              borderBottom: `1px solid ${C.border}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "12px 16px",
+              boxShadow: "0 1px 8px rgba(0,0,0,0.06)",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
                   background: C.accent,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 18,
+                  fontSize: 16,
                 }}
               >
                 🐾
@@ -1717,147 +2245,334 @@ export default function VetPlatform() {
               <div>
                 <div
                   style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: 16,
+                    fontFamily: "'Playfair Display',serif",
+                    fontSize: 14,
                     fontWeight: 700,
+                    lineHeight: 1,
                   }}
                 >
                   VetCare
                 </div>
                 <div
                   style={{
-                    fontSize: 10,
+                    fontSize: 9,
                     color: C.textMuted,
                     letterSpacing: ".5px",
                   }}
                 >
-                  MVP PLATFORM
+                  PAWI MVP
                 </div>
               </div>
             </div>
-          </div>
-          <nav style={{ flex: 1, padding: "16px 12px" }}>
-            {MENU.map((item) => (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              {saving && (
+                <div
+                  style={{ fontSize: 11, color: C.warning, fontWeight: 600 }}
+                >
+                  Guardando...
+                </div>
+              )}
               <button
-                key={item.key}
-                onClick={() => {
-                  setPage(item.key);
-                  setSelectedPet(null);
-                }}
+                onClick={() => setSidebarOpen(true)}
                 style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 8,
+                  background: C.bg,
+                  border: `1px solid ${C.border}`,
+                  cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
-                  gap: 12,
-                  width: "100%",
-                  padding: "10px 14px",
-                  borderRadius: 10,
-                  border: "none",
-                  cursor: "pointer",
-                  background: page === item.key ? C.accentDim : "transparent",
-                  color: page === item.key ? "#0f766e" : C.textMuted,
-                  fontSize: 14,
-                  fontWeight: page === item.key ? 700 : 500,
-                  marginBottom: 2,
-                  transition: "all .15s",
+                  justifyContent: "center",
+                  fontSize: 18,
                 }}
               >
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
-                {item.label}
-                {item.badge > 0 && (
-                  <span
-                    style={{
-                      marginLeft: "auto",
-                      background: C.danger,
-                      color: "#fff",
-                      borderRadius: "50%",
-                      width: 18,
-                      height: 18,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 10,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+                ☰
               </button>
-            ))}
-          </nav>
-          <div
-            style={{ padding: "12px 16px", borderTop: `1px solid ${C.border}` }}
-          >
+            </div>
+          </div>
+        )}
+
+        {/* ── MOBILE SIDEBAR DRAWER ── */}
+        {isMobile && sidebarOpen && (
+          <>
+            <div
+              onClick={() => setSidebarOpen(false)}
+              style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(0,0,0,0.4)",
+                zIndex: 90,
+                backdropFilter: "blur(2px)",
+              }}
+            />
             <div
               style={{
+                position: "fixed",
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 260,
+                background: C.surface,
+                zIndex: 100,
                 display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 11,
-                color: saving ? C.warning : "#00b386",
-                marginBottom: 12,
-                fontWeight: 600,
+                flexDirection: "column",
+                padding: "24px 0",
+                boxShadow: "4px 0 24px rgba(0,0,0,0.15)",
+                animation: "fadeIn .25s ease",
               }}
             >
               <div
                 style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: saving ? C.warning : "#00b386",
-                  animation: "pulse 2s infinite",
+                  padding: "0 20px 20px",
+                  borderBottom: `1px solid ${C.border}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
                 }}
-              />
-              {saving ? "Guardando..." : "Sincronizado ☁️"}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 10,
+                      background: C.accent,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 18,
+                    }}
+                  >
+                    🐾
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: "'Playfair Display',serif",
+                        fontSize: 16,
+                        fontWeight: 700,
+                      }}
+                    >
+                      VetCare
+                    </div>
+                    <div style={{ fontSize: 10, color: C.textMuted }}>
+                      MVP PLATFORM
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  style={{
+                    background: C.bg,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    width: 30,
+                    height: 30,
+                    cursor: "pointer",
+                    fontSize: 14,
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <nav style={{ flex: 1, padding: "16px 12px" }}>
+                {MENU.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => navigateTo(item.key)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      width: "100%",
+                      padding: "12px 14px",
+                      borderRadius: 10,
+                      border: "none",
+                      cursor: "pointer",
+                      background:
+                        page === item.key ? C.accentDim : "transparent",
+                      color: page === item.key ? "#0f766e" : C.textMuted,
+                      fontSize: 15,
+                      fontWeight: page === item.key ? 700 : 500,
+                      marginBottom: 4,
+                      transition: "all .15s",
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    <span style={{ fontSize: 18 }}>{item.icon}</span>
+                    {item.label}
+                    {item.badge > 0 && (
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          background: C.danger,
+                          color: "#fff",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          fontWeight: 700,
+                        }}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </nav>
+              <div
+                style={{
+                  padding: "12px 16px",
+                  borderTop: `1px solid ${C.border}`,
+                }}
+              >
+                <button
+                  onClick={() =>
+                    exportData(
+                      profile,
+                      pets,
+                      visits,
+                      vaccines,
+                      appointments,
+                      inventory
+                    )
+                  }
+                  style={{
+                    width: "100%",
+                    padding: "9px",
+                    background: "#F1F5F9",
+                    color: C.text,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    marginBottom: 8,
+                    fontFamily: "inherit",
+                  }}
+                >
+                  ⬇ Exportar mis datos
+                </button>
+                <button
+                  onClick={() => signOut(auth)}
+                  style={{
+                    width: "100%",
+                    padding: "9px",
+                    background: "transparent",
+                    color: C.textMuted,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    fontFamily: "inherit",
+                  }}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() =>
-                exportData(
-                  profile,
-                  pets,
-                  visits,
-                  vaccines,
-                  appointments,
-                  inventory
-                )
-              }
-              style={{
-                width: "100%",
-                padding: "7px",
-                background: "#F1F5F9",
-                color: C.text,
-                border: `1px solid ${C.border}`,
-                borderRadius: 8,
-                cursor: "pointer",
-                fontSize: 11,
-                fontWeight: 600,
-                marginBottom: 6,
-              }}
-            >
-              ⬇ Exportar mis datos
-            </button>
-            <button
-              onClick={() => signOut(auth)}
-              style={{
-                width: "100%",
-                padding: "7px",
-                background: "transparent",
-                color: C.textMuted,
-                border: `1px solid ${C.border}`,
-                borderRadius: 8,
-                cursor: "pointer",
-                fontSize: 11,
-                fontWeight: 600,
-              }}
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </div>
+          </>
+        )}
 
-        {/* ── MAIN ── */}
+        {/* ── MOBILE BOTTOM NAV ── */}
+        {isMobile && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              zIndex: 50,
+              background: C.surface,
+              borderTop: `1px solid ${C.border}`,
+              display: "flex",
+              alignItems: "center",
+              boxShadow: "0 -2px 12px rgba(0,0,0,0.08)",
+              paddingBottom: "env(safe-area-inset-bottom,0px)",
+            }}
+          >
+            {MENU.map((item) => (
+              <button
+                key={item.key}
+                onClick={() => navigateTo(item.key)}
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 2,
+                  padding: "10px 4px",
+                  border: "none",
+                  background: "transparent",
+                  cursor: "pointer",
+                  position: "relative",
+                  fontFamily: "inherit",
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{item.icon}</span>
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: page === item.key ? "#0f766e" : C.textDim,
+                    letterSpacing: ".3px",
+                  }}
+                >
+                  {item.label}
+                </span>
+                {page === item.key && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: "50%",
+                      transform: "translateX(-50%)",
+                      width: 24,
+                      height: 3,
+                      background: C.accent,
+                      borderRadius: "0 0 3px 3px",
+                    }}
+                  />
+                )}
+                {item.badge > 0 && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: "calc(50% - 18px)",
+                      background: C.danger,
+                      color: "#fff",
+                      borderRadius: "50%",
+                      width: 14,
+                      height: 14,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 9,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {item.badge}
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── MAIN CONTENT ── */}
         <div
-          style={{ marginLeft: 220, flex: 1, padding: 32, minHeight: "100vh" }}
+          style={{
+            marginLeft: isMobile ? 0 : 220,
+            flex: 1,
+            padding: isMobile ? "72px 16px 80px" : 32,
+            minHeight: "100vh",
+          }}
         >
           {page === "dashboard" && (
             <DashboardPage
@@ -1968,6 +2683,7 @@ function DashboardPage({
   onDischargeInternado,
   onSelectPet,
 }) {
+  const isMobile = useIsMobile();
   const statusColor = {
     Confirmado: C.accent,
     "En espera": C.warning,
@@ -1983,20 +2699,24 @@ function DashboardPage({
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", flexDirection: "column", gap: 24 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: isMobile ? 16 : 24,
+      }}
     >
       <div>
         <div
           style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 28,
+            fontFamily: "'Playfair Display',serif",
+            fontSize: isMobile ? 22 : 28,
             fontWeight: 700,
             marginBottom: 4,
           }}
         >
           Panel Principal 👋
         </div>
-        <div style={{ color: C.textMuted, fontSize: 14 }}>
+        <div style={{ color: C.textMuted, fontSize: 13 }}>
           {new Date().toLocaleDateString("es-ES", {
             weekday: "long",
             day: "numeric",
@@ -2010,11 +2730,13 @@ function DashboardPage({
         style={{
           background: "linear-gradient(135deg,#F1F5F9,#FFFFFF)",
           borderRadius: 14,
-          padding: "14px 20px",
+          padding: isMobile ? "12px 14px" : "14px 20px",
           display: "flex",
-          alignItems: "center",
+          alignItems: isMobile ? "flex-start" : "center",
           justifyContent: "space-between",
           border: `1px solid ${C.border}`,
+          flexDirection: isMobile ? "column" : "row",
+          gap: isMobile ? 10 : 0,
         }}
       >
         <div>
@@ -2025,11 +2747,11 @@ function DashboardPage({
             Exporta tu información en cualquier momento.
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10 }}>
+        <div style={{ display: "flex", gap: 8 }}>
           <button
             onClick={onNewPatient}
             style={{
-              padding: "7px 14px",
+              padding: "8px 14px",
               background: C.surface,
               color: "#1E293B",
               border: `1px solid ${C.border}`,
@@ -2037,6 +2759,7 @@ function DashboardPage({
               cursor: "pointer",
               fontSize: 12,
               fontWeight: 600,
+              fontFamily: "inherit",
             }}
           >
             + Paciente
@@ -2044,7 +2767,7 @@ function DashboardPage({
           <button
             onClick={onNewAppointment}
             style={{
-              padding: "7px 14px",
+              padding: "8px 14px",
               background: C.accent,
               color: "#000",
               border: "none",
@@ -2052,6 +2775,7 @@ function DashboardPage({
               cursor: "pointer",
               fontSize: 12,
               fontWeight: 700,
+              fontFamily: "inherit",
             }}
           >
             + Cita
@@ -2062,8 +2786,8 @@ function DashboardPage({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3,1fr)",
-          gap: 16,
+          gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3,1fr)",
+          gap: isMobile ? 10 : 16,
         }}
       >
         {stats.map((s, i) => (
@@ -2074,17 +2798,30 @@ function DashboardPage({
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: 16,
-              padding: 24,
-              position: "relative",
-              overflow: "hidden",
+              padding: isMobile ? "16px 14px" : 24,
               boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+              gridColumn: isMobile && i === 2 ? "1 / -1" : "auto",
             }}
           >
-            <div style={{ fontSize: 32, marginBottom: 12 }}>{s.icon}</div>
-            <div style={{ fontSize: 32, fontWeight: 700, color: s.color }}>
+            <div style={{ fontSize: isMobile ? 24 : 32, marginBottom: 8 }}>
+              {s.icon}
+            </div>
+            <div
+              style={{
+                fontSize: isMobile ? 24 : 32,
+                fontWeight: 700,
+                color: s.color,
+              }}
+            >
               {s.value}
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>
+            <div
+              style={{
+                fontSize: isMobile ? 12 : 14,
+                fontWeight: 600,
+                marginTop: 4,
+              }}
+            >
               {s.label}
             </div>
           </div>
@@ -2092,18 +2829,24 @@ function DashboardPage({
       </div>
 
       <div
-        style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 20 }}
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
+          gap: isMobile ? 16 : 20,
+        }}
       >
-        <Card>
+        <Card style={{ padding: isMobile ? 16 : 24 }}>
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              marginBottom: 20,
+              marginBottom: 16,
             }}
           >
-            <div style={{ fontWeight: 700, fontSize: 16 }}>Próximas Citas</div>
+            <div style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
+              Próximas Citas
+            </div>
             <button
               onClick={onNewAppointment}
               style={{
@@ -2111,10 +2854,11 @@ function DashboardPage({
                 color: "#000",
                 border: "none",
                 borderRadius: 8,
-                padding: "6px 14px",
+                padding: "6px 12px",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontSize: 12,
+                fontFamily: "inherit",
               }}
             >
               + Nueva
@@ -2133,36 +2877,46 @@ function DashboardPage({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 14,
-                  padding: "12px 0",
+                  gap: isMobile ? 10 : 14,
+                  padding: "10px 0",
                   borderBottom: i < 4 ? `1px solid ${C.border}` : "none",
                 }}
               >
-                <div style={{ fontSize: 24 }}>{a.avatar}</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 14 }}>
+                <div style={{ fontSize: isMobile ? 20 : 24 }}>{a.avatar}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      fontSize: 13,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: isMobile ? "nowrap" : "normal",
+                    }}
+                  >
                     {a.pet}{" "}
                     <span style={{ color: C.textMuted, fontWeight: 400 }}>
                       — {a.owner}
                     </span>
                   </div>
                   <div
-                    style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}
+                    style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}
                   >
                     {a.type} · {a.date}
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
                   <div
                     style={{ fontWeight: 700, fontSize: 13, color: "#0f766e" }}
                   >
                     {a.time}
                   </div>
-                  <div style={{ marginTop: 4 }}>
-                    <Badge color={statusColor[a.status] || C.textMuted}>
-                      {a.status}
-                    </Badge>
-                  </div>
+                  {!isMobile && (
+                    <div style={{ marginTop: 4 }}>
+                      <Badge color={statusColor[a.status] || C.textMuted}>
+                        {a.status}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -2173,11 +2927,11 @@ function DashboardPage({
           )}
         </Card>
 
-        <Card>
+        <Card style={{ padding: isMobile ? 16 : 24 }}>
           <div
             style={{
               fontWeight: 700,
-              fontSize: 16,
+              fontSize: isMobile ? 14 : 16,
               marginBottom: 12,
               color: C.danger,
             }}
@@ -2186,10 +2940,10 @@ function DashboardPage({
           </div>
           {expiredVaccines.length === 0 ? (
             <div style={{ fontSize: 13, color: C.textMuted }}>
-              Sin alertas de vacunas. Todo al día.
+              Sin alertas de vacunas. Todo al día. ✅
             </div>
           ) : (
-            expiredVaccines.map((v, i) => {
+            expiredVaccines.slice(0, isMobile ? 3 : 10).map((v, i) => {
               const pet = pets.find((p) => p.id === v.petId);
               return (
                 <div
@@ -2197,7 +2951,7 @@ function DashboardPage({
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
+                    gap: 10,
                     padding: "8px 0",
                     borderBottom:
                       i < expiredVaccines.length - 1
@@ -2205,24 +2959,24 @@ function DashboardPage({
                         : "none",
                   }}
                 >
-                  <div style={{ fontSize: 24 }}>💉</div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>
+                  <div style={{ fontSize: 20 }}>💉</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12 }}>
                       {v.name}
                     </div>
-                    <div style={{ fontSize: 12, color: C.textMuted }}>
-                      Paciente: {pet ? pet.name : "Desconocido"}
+                    <div style={{ fontSize: 11, color: C.textMuted }}>
+                      {pet ? pet.name : "Desconocido"}
                     </div>
                   </div>
                   <div
                     style={{
-                      marginLeft: "auto",
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: 600,
                       color: C.danger,
+                      flexShrink: 0,
                     }}
                   >
-                    Venció: {v.nextDue}
+                    {v.nextDue}
                   </div>
                 </div>
               );
@@ -2231,22 +2985,23 @@ function DashboardPage({
         </Card>
       </div>
 
-      <Card>
+      {/* Internados */}
+      <Card style={{ padding: isMobile ? 16 : 24 }}>
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 20,
+            marginBottom: 16,
           }}
         >
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>
+            <div style={{ fontWeight: 700, fontSize: isMobile ? 14 : 16 }}>
               🏨 Pacientes Internados
             </div>
             <div style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}>
               {internados.length} paciente{internados.length !== 1 ? "s" : ""}{" "}
-              actualmente internado{internados.length !== 1 ? "s" : ""}
+              internado{internados.length !== 1 ? "s" : ""}
             </div>
           </div>
           <button
@@ -2256,32 +3011,35 @@ function DashboardPage({
               color: "#fff",
               border: "none",
               borderRadius: 8,
-              padding: "8px 16px",
+              padding: isMobile ? "7px 12px" : "8px 16px",
               fontWeight: 700,
               cursor: "pointer",
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
+              fontFamily: "inherit",
             }}
           >
-            + Internar paciente
+            + Internar
           </button>
         </div>
         {internados.length === 0 ? (
           <div
             style={{
               textAlign: "center",
-              padding: "32px 0",
+              padding: isMobile ? "20px 0" : "32px 0",
               color: C.textMuted,
               fontSize: 14,
             }}
           >
-            <div style={{ fontSize: 40, marginBottom: 10 }}>🏥</div>
-            No hay pacientes internados actualmente.
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🏥</div>No hay
+            pacientes internados.
           </div>
         ) : (
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gridTemplateColumns: isMobile
+                ? "1fr"
+                : "repeat(auto-fill,minmax(280px,1fr))",
               gap: 14,
             }}
           >
@@ -2292,88 +3050,41 @@ function DashboardPage({
                   background: C.purple + "08",
                   border: `1.5px solid ${C.purple}25`,
                   borderRadius: 14,
-                  padding: 16,
+                  padding: 14,
                 }}
               >
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: 12,
-                    marginBottom: 12,
+                    gap: 10,
+                    marginBottom: 10,
                   }}
                 >
                   <div
                     style={{
-                      width: 48,
-                      height: 48,
+                      width: 44,
+                      height: 44,
                       borderRadius: 12,
                       background: p.color + "20",
                       border: `2px solid ${p.color}30`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 24,
+                      fontSize: 22,
                     }}
                   >
                     {p.avatar}
                   </div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 15 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 700, fontSize: 14 }}>
                       {p.name}
                     </div>
                     <div style={{ fontSize: 12, color: C.textMuted }}>
-                      {p.breed} · {p.species}
+                      {p.breed}
                     </div>
                   </div>
-                  <div style={{ marginLeft: "auto" }}>
-                    <Badge color={C.purple}>Internado</Badge>
-                  </div>
-                </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 6,
-                    marginBottom: 12,
-                  }}
-                >
-                  {[
-                    ["👤 Dueño", p.owner],
-                    ["📞 Teléfono", p.phone || "—"],
-                    ["📅 Ingresó", p.admissionDate || "—"],
-                    ["⚖️ Peso", p.weight || "—"],
-                  ].map(([k, v]) => (
-                    <div
-                      key={k}
-                      style={{
-                        background: C.surface,
-                        borderRadius: 8,
-                        padding: "6px 10px",
-                        border: `1px solid ${C.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: C.textDim,
-                          fontWeight: 600,
-                        }}
-                      >
-                        {k}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: C.text,
-                          marginTop: 2,
-                        }}
-                      >
-                        {v}
-                      </div>
-                    </div>
-                  ))}
+                  <Badge color={C.purple}>Internado</Badge>
                 </div>
                 {p.admissionReason && (
                   <div
@@ -2381,8 +3092,8 @@ function DashboardPage({
                       background: C.warning + "12",
                       border: `1px solid ${C.warning}30`,
                       borderRadius: 8,
-                      padding: "8px 12px",
-                      marginBottom: 10,
+                      padding: "6px 10px",
+                      marginBottom: 8,
                       fontSize: 12,
                     }}
                   >
@@ -2405,6 +3116,7 @@ function DashboardPage({
                       fontSize: 12,
                       color: C.textMuted,
                       fontWeight: 600,
+                      fontFamily: "inherit",
                     }}
                   >
                     Ver ficha
@@ -2421,9 +3133,10 @@ function DashboardPage({
                       fontSize: 12,
                       color: "#0f766e",
                       fontWeight: 700,
+                      fontFamily: "inherit",
                     }}
                   >
-                    ✓ Dar de alta
+                    ✓ Alta
                   </button>
                 </div>
               </div>
@@ -2490,7 +3203,7 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
         label="Motivo de internamiento *"
         value={form.reason}
         onChange={(e) => setForm({ ...form, reason: e.target.value })}
-        placeholder="Ej: Post-operatorio, observación, tratamiento IV..."
+        placeholder="Ej: Post-operatorio, observación..."
       />
       <div style={{ marginBottom: 14 }}>
         <div
@@ -2509,7 +3222,7 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           rows={2}
-          placeholder="Indicaciones, medicación, cuidados especiales..."
+          placeholder="Indicaciones, medicación..."
           style={{
             width: "100%",
             padding: "10px 14px",
@@ -2536,6 +3249,7 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -2553,6 +3267,7 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.petId || !form.reason ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Internar
@@ -2564,7 +3279,8 @@ function AdmitInternadoModal({ pets, onClose, onSave }) {
 
 // ─── APPOINTMENTS PAGE ────────────────────────────────────────────────────────
 function AppointmentsPage({ appointments, onAdd, onUpdate }) {
-  const [view, setView] = useState("Semana");
+  const isMobile = useIsMobile();
+  const [view, setView] = useState(isMobile ? "Lista" : "Semana");
   const [weekOffset, setWeekOffset] = useState(0);
   const [monthOffset, setMonthOffset] = useState(0);
   const [selectedApt, setSelectedApt] = useState(null);
@@ -2606,7 +3322,6 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
     );
     if (selectedApt?.id === apt.id) setSelectedApt({ ...apt, status: next });
   };
-
   const cancelApt = async (apt) => {
     await onUpdate(
       appointments.map((a) =>
@@ -2616,429 +3331,450 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
     if (selectedApt?.id === apt.id)
       setSelectedApt({ ...apt, status: "Cancelado" });
   };
-
   const deleteApt = async (apt) => {
     await onUpdate(appointments.filter((a) => a.id !== apt.id));
     setSelectedApt(null);
   };
 
-  const ViewTabs = () => (
-    <div
-      style={{
-        display: "flex",
-        background: C.bg,
-        borderRadius: 10,
-        padding: 3,
-        gap: 2,
-      }}
-    >
-      {[
-        ["Hoy", "📋"],
-        ["Semana", "📅"],
-        ["Mes", "🗓"],
-        ["Lista", "☰"],
-      ].map(([v, icon]) => (
-        <button
-          key={v}
-          onClick={() => setView(v)}
-          style={{
-            padding: "7px 16px",
-            borderRadius: 8,
-            border: "none",
-            cursor: "pointer",
-            fontSize: 13,
-            fontWeight: 600,
-            background: view === v ? C.surface : "transparent",
-            color: view === v ? C.text : C.textMuted,
-            boxShadow: view === v ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
-            transition: "all .15s",
-          }}
-        >
-          {icon} {v}
-        </button>
-      ))}
-    </div>
-  );
+  const todayApts = appointments.filter((a) => a.date === todayStr).length;
+  const weekApts = (() => {
+    const d = new Date(today);
+    d.setDate(d.getDate() + 7);
+    return appointments.filter((a) => {
+      const ad = new Date(a.date + "T00:00:00");
+      return ad >= today && ad <= d;
+    }).length;
+  })();
+  const pendingApts = appointments.filter(
+    (a) => a.status === "Pendiente" || a.status === "En espera"
+  ).length;
 
   const AptDetailPanel = ({ apt, onClose, onCycle }) => (
-    <div className="fade-in" style={{ width: 280, flexShrink: 0 }}>
-      <Card style={{ position: "sticky", top: 0, padding: 20 }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 16,
-          }}
+    <div
+      className="fade-in"
+      style={
+        isMobile
+          ? {
+              position: "fixed",
+              inset: 0,
+              zIndex: 80,
+              background: "rgba(0,0,0,0.4)",
+              display: "flex",
+              alignItems: "flex-end",
+            }
+          : { width: 280, flexShrink: 0 }
+      }
+    >
+      <div
+        style={
+          isMobile
+            ? {
+                width: "100%",
+                background: C.surface,
+                borderRadius: "20px 20px 0 0",
+                padding: 24,
+                maxHeight: "80vh",
+                overflowY: "auto",
+              }
+            : {}
+        }
+      >
+        <Card
+          style={
+            isMobile
+              ? { padding: 0, border: "none", boxShadow: "none" }
+              : { position: "sticky", top: 0, padding: 20 }
+          }
         >
-          <div style={{ fontWeight: 700, fontSize: 14 }}>Detalle de cita</div>
-          <button
-            onClick={onClose}
-            style={{
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 18,
-              color: C.textMuted,
-              lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            marginBottom: 16,
-            padding: "12px 14px",
-            background: C.bg,
-            borderRadius: 12,
-          }}
-        >
-          <div style={{ fontSize: 36 }}>{apt.avatar}</div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 16 }}>{apt.pet}</div>
-            <div style={{ fontSize: 13, color: C.textMuted }}>{apt.owner}</div>
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 8,
-            marginBottom: 16,
-          }}
-        >
-          {[
-            ["📅 Fecha", apt.date],
-            ["🕐 Hora", apt.time],
-            ["🏷 Tipo", apt.type],
-            ["👤 Propietario", apt.owner],
-          ].map(([k, v]) => (
-            <div
-              key={k}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: "8px 0",
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              <span
-                style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}
-              >
-                {k}
-              </span>
-              <span style={{ fontSize: 12, fontWeight: 700 }}>{v}</span>
-            </div>
-          ))}
-          {apt.diagnosis && (
-            <div
-              style={{
-                padding: "8px 12px",
-                background: C.info + "10",
-                borderRadius: 8,
-                fontSize: 12,
-                color: C.text,
-                lineHeight: 1.5,
-                border: `1px solid ${C.info}20`,
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: C.info,
-                  marginBottom: 3,
-                  fontSize: 11,
-                }}
-              >
-                📋 DIAGNÓSTICO
-              </div>
-              {apt.diagnosis}
-            </div>
-          )}
-          {apt.notes && (
-            <div
-              style={{
-                padding: "8px 12px",
-                background: C.warning + "10",
-                borderRadius: 8,
-                fontSize: 12,
-                color: C.text,
-                lineHeight: 1.5,
-                border: `1px solid ${C.warning}20`,
-              }}
-            >
-              <div
-                style={{
-                  fontWeight: 700,
-                  color: C.warning,
-                  marginBottom: 3,
-                  fontSize: 11,
-                }}
-              >
-                📝 NOTAS
-              </div>
-              {apt.notes}
-            </div>
-          )}
-        </div>
-        <div style={{ marginBottom: 12 }}>
           <div
             style={{
-              fontSize: 11,
-              color: C.textMuted,
-              fontWeight: 700,
-              textTransform: "uppercase",
-              letterSpacing: ".5px",
-              marginBottom: 8,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 16,
             }}
           >
-            Estado actual
+            <div style={{ fontWeight: 700, fontSize: 14 }}>Detalle de cita</div>
+            <button
+              onClick={onClose}
+              style={{
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 18,
+                color: C.textMuted,
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              marginBottom: 16,
+              padding: "12px 14px",
+              background: C.bg,
+              borderRadius: 12,
+            }}
+          >
+            <div style={{ fontSize: 36 }}>{apt.avatar}</div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 16 }}>{apt.pet}</div>
+              <div style={{ fontSize: 13, color: C.textMuted }}>
+                {apt.owner}
+              </div>
+            </div>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
             {[
-              "Pendiente",
-              "Confirmado",
-              "En espera",
-              "En consulta",
-              "Completado",
-              "Cancelado",
-            ].map((s) => (
-              <span
-                key={s}
+              ["📅 Fecha", apt.date],
+              ["🕐 Hora", apt.time],
+              ["🏷 Tipo", apt.type],
+              ["👤 Propietario", apt.owner],
+            ].map(([k, v]) => (
+              <div
+                key={k}
                 style={{
-                  fontSize: 11,
-                  padding: "3px 9px",
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  background: apt.status === s ? STATUS_COLOR[s] + "25" : C.bg,
-                  color: apt.status === s ? STATUS_COLOR[s] : C.textDim,
-                  border: `1px solid ${
-                    apt.status === s ? STATUS_COLOR[s] + "40" : C.border
-                  }`,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  padding: "8px 0",
+                  borderBottom: `1px solid ${C.border}`,
                 }}
               >
-                {s}
-              </span>
+                <span
+                  style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}
+                >
+                  {k}
+                </span>
+                <span style={{ fontSize: 12, fontWeight: 700 }}>{v}</span>
+              </div>
             ))}
+            {apt.diagnosis && (
+              <div
+                style={{
+                  padding: "8px 12px",
+                  background: C.info + "10",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  border: `1px solid ${C.info}20`,
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: C.info,
+                    marginBottom: 3,
+                    fontSize: 11,
+                  }}
+                >
+                  📋 DIAGNÓSTICO
+                </div>
+                {apt.diagnosis}
+              </div>
+            )}
+            {apt.notes && (
+              <div
+                style={{
+                  padding: "8px 12px",
+                  background: C.warning + "10",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  border: `1px solid ${C.warning}20`,
+                }}
+              >
+                <div
+                  style={{
+                    fontWeight: 700,
+                    color: C.warning,
+                    marginBottom: 3,
+                    fontSize: 11,
+                  }}
+                >
+                  📝 NOTAS
+                </div>
+                {apt.notes}
+              </div>
+            )}
           </div>
-        </div>
-        {apt.status !== "Cancelado" && apt.status !== "Completado" && (
-          <button
-            onClick={(e) => onCycle(apt, e)}
-            style={{
-              width: "100%",
-              padding: "10px",
-              background: C.accent,
-              border: "none",
-              borderRadius: 10,
-              fontWeight: 700,
-              cursor: "pointer",
-              fontSize: 13,
-              color: "#000",
-              marginBottom: 8,
-            }}
-          >
-            Avanzar estado →
-          </button>
-        )}
-        <div style={{ display: "flex", gap: 8 }}>
-          {apt.status !== "Cancelado" && (
+          {apt.status !== "Cancelado" && apt.status !== "Completado" && (
             <button
-              onClick={() => cancelApt(apt)}
+              onClick={(e) => onCycle(apt, e)}
+              style={{
+                width: "100%",
+                padding: "10px",
+                background: C.accent,
+                border: "none",
+                borderRadius: 10,
+                fontWeight: 700,
+                cursor: "pointer",
+                fontSize: 13,
+                color: "#000",
+                marginBottom: 8,
+                fontFamily: "inherit",
+              }}
+            >
+              Avanzar estado →
+            </button>
+          )}
+          <div style={{ display: "flex", gap: 8 }}>
+            {apt.status !== "Cancelado" && (
+              <button
+                onClick={() => cancelApt(apt)}
+                style={{
+                  flex: 1,
+                  padding: "8px",
+                  background: C.warning + "15",
+                  border: `1px solid ${C.warning}30`,
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  fontSize: 12,
+                  color: "#92400e",
+                  fontFamily: "inherit",
+                }}
+              >
+                ✕ Cancelar
+              </button>
+            )}
+            <button
+              onClick={() => deleteApt(apt)}
               style={{
                 flex: 1,
                 padding: "8px",
-                background: C.warning + "15",
-                border: `1px solid ${C.warning}30`,
+                background: C.danger + "10",
+                border: `1px solid ${C.danger}30`,
                 borderRadius: 10,
                 fontWeight: 700,
                 cursor: "pointer",
                 fontSize: 12,
-                color: "#92400e",
+                color: C.danger,
+                fontFamily: "inherit",
               }}
             >
-              ✕ Cancelar
+              🗑 Eliminar
             </button>
-          )}
-          <button
-            onClick={() => deleteApt(apt)}
-            style={{
-              flex: 1,
-              padding: "8px",
-              background: C.danger + "10",
-              border: `1px solid ${C.danger}30`,
-              borderRadius: 10,
-              fontWeight: 700,
-              cursor: "pointer",
-              fontSize: 12,
-              color: C.danger,
-            }}
-          >
-            🗑 Eliminar
-          </button>
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 
-  const TodayView = () => {
-    const HOURS = Array.from({ length: 13 }, (_, i) => i + 7);
-    const todayApts = appointments
-      .filter((a) => a.date === todayStr)
-      .sort((a, b) => a.time.localeCompare(b.time));
-    const getAptForHour = (h) =>
-      todayApts.filter((a) => parseInt(a.time?.split(":")[0] || "0") === h);
+  const ListView = () => {
+    const [statusFilter, setStatusFilter] = useState("Todos");
+    const filtered = appointments.filter(
+      (a) => statusFilter === "Todos" || a.status === statusFilter
+    );
+    const grouped = filtered.reduce((acc, a) => {
+      (acc[a.date] = acc[a.date] || []).push(a);
+      return acc;
+    }, {});
+    const sortedDates = Object.keys(grouped).sort();
     return (
-      <div style={{ display: "flex", gap: 20 }}>
-        <div style={{ flex: 1 }}>
-          <Card style={{ padding: 0, overflow: "hidden" }}>
-            <div
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+          {[
+            "Todos",
+            "Confirmado",
+            "En espera",
+            "En consulta",
+            "Pendiente",
+            "Completado",
+            "Cancelado",
+          ].map((f) => (
+            <button
+              key={f}
+              onClick={() => setStatusFilter(f)}
               style={{
-                padding: "16px 20px",
-                borderBottom: `1px solid ${C.border}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
+                background: statusFilter === f ? C.accentDim : C.surface,
+                color: statusFilter === f ? "#0f766e" : C.textMuted,
+                border: `1px solid ${statusFilter === f ? C.accent : C.border}`,
+                borderRadius: 8,
+                padding: "5px 10px",
+                cursor: "pointer",
+                fontSize: 11,
+                fontWeight: 600,
+                fontFamily: "inherit",
               }}
             >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: C.accent + "20",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 800,
-                  fontSize: 16,
-                  color: "#0f766e",
-                }}
-              >
-                {today.getDate()}
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  {today.toLocaleDateString("es-ES", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                  })}
-                </div>
-                <div style={{ fontSize: 12, color: C.textMuted }}>
-                  {todayApts.length} cita{todayApts.length !== 1 ? "s" : ""}{" "}
-                  programadas
-                </div>
-              </div>
-            </div>
-            <div style={{ overflowY: "auto", maxHeight: 520 }}>
-              {HOURS.map((h) => {
-                const apts = getAptForHour(h);
-                return (
-                  <div
-                    key={h}
-                    style={{
-                      display: "flex",
-                      minHeight: 60,
-                      borderBottom: `1px solid ${C.border}`,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 56,
-                        padding: "8px 0 0 14px",
-                        fontSize: 12,
-                        color: C.textDim,
-                        fontWeight: 600,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
-                    </div>
-                    <div
-                      onClick={() =>
-                        onAdd({
-                          date: todayStr,
-                          time: `${String(h).padStart(2, "0")}:00`,
-                        })
-                      }
-                      style={{
-                        flex: 1,
-                        padding: "6px 10px 6px 6px",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        cursor: "cell",
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = C.accent + "07")
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background = "transparent")
-                      }
-                    >
-                      {apts.map((a, i) => (
-                        <div
-                          key={i}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedApt(a);
-                          }}
-                          style={{
-                            background: STATUS_BG[a.status] || "#F1F5F9",
-                            border: `1.5px solid ${
-                              STATUS_COLOR[a.status] || C.border
-                            }30`,
-                            borderLeft: `3px solid ${
-                              STATUS_COLOR[a.status] || C.border
-                            }`,
-                            borderRadius: 8,
-                            padding: "6px 10px",
-                            cursor: "pointer",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            transition: "transform .15s",
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.transform =
-                              "translateX(3px)")
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.transform = "translateX(0)")
-                          }
-                        >
-                          <span style={{ fontSize: 16 }}>{a.avatar}</span>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontWeight: 700, fontSize: 13 }}>
-                              {a.pet}
-                            </div>
-                            <div style={{ fontSize: 11, color: C.textMuted }}>
-                              {a.owner} · {a.type}
-                            </div>
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: STATUS_COLOR[a.status],
-                            }}
-                          >
-                            {a.time}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+              {f}
+            </button>
+          ))}
+        </div>
+        {sortedDates.length === 0 ? (
+          <Card>
+            <div
+              style={{ textAlign: "center", padding: 32, color: C.textMuted }}
+            >
+              No hay citas registradas.
             </div>
           </Card>
-        </div>
+        ) : (
+          sortedDates.map((date) => {
+            const d = new Date(date + "T00:00:00");
+            const isToday = date === todayStr;
+            return (
+              <div key={date}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 8,
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 8,
+                      background: isToday ? C.accent : C.border + "60",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 800,
+                      fontSize: 13,
+                      color: isToday ? "#fff" : C.textMuted,
+                    }}
+                  >
+                    {d.getDate()}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontWeight: 700,
+                        fontSize: 12,
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {d.toLocaleDateString("es-ES", {
+                        weekday: "long",
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </div>
+                    <div style={{ fontSize: 11, color: C.textMuted }}>
+                      {grouped[date].length} cita
+                      {grouped[date].length !== 1 ? "s" : ""}
+                    </div>
+                  </div>
+                  {isToday && <Badge color={C.accent}>Hoy</Badge>}
+                </div>
+                <Card style={{ padding: 0 }}>
+                  {[...grouped[date]]
+                    .sort((a, b) => a.time.localeCompare(b.time))
+                    .map((a, i) => (
+                      <div
+                        key={i}
+                        onClick={() => setSelectedApt(a)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 10,
+                          padding: isMobile ? "10px 14px" : "12px 20px",
+                          borderBottom:
+                            i < grouped[date].length - 1
+                              ? `1px solid ${C.border}`
+                              : "none",
+                          cursor: "pointer",
+                          transition: "background .15s",
+                        }}
+                        onMouseEnter={(e) =>
+                          (e.currentTarget.style.background = C.surfaceHover)
+                        }
+                        onMouseLeave={(e) =>
+                          (e.currentTarget.style.background = "transparent")
+                        }
+                      >
+                        <div style={{ fontSize: 20 }}>{a.avatar}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              fontSize: 13,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {a.pet}{" "}
+                            <span
+                              style={{ color: C.textMuted, fontWeight: 400 }}
+                            >
+                              — {a.owner}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: 11, color: C.textMuted }}>
+                            {a.type}
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontWeight: 800,
+                            fontSize: 13,
+                            color: "#0f766e",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {a.time}
+                        </div>
+                        <Badge color={STATUS_COLOR[a.status]}>{a.status}</Badge>
+                        {!isMobile &&
+                          a.status !== "Cancelado" &&
+                          a.status !== "Completado" && (
+                            <button
+                              onClick={(e) => cycleStatus(a, e)}
+                              style={{
+                                background: "transparent",
+                                border: `1px solid ${C.border}`,
+                                color: C.text,
+                                borderRadius: 6,
+                                padding: "4px 10px",
+                                cursor: "pointer",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                fontFamily: "inherit",
+                              }}
+                            >
+                              →
+                            </button>
+                          )}
+                        {!isMobile && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteApt(a);
+                            }}
+                            style={{
+                              background: C.danger + "10",
+                              border: `1px solid ${C.danger}25`,
+                              color: C.danger,
+                              borderRadius: 6,
+                              padding: "4px 8px",
+                              cursor: "pointer",
+                              fontSize: 12,
+                              fontFamily: "inherit",
+                            }}
+                          >
+                            🗑
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                </Card>
+              </div>
+            );
+          })
+        )}
         {selectedApt && (
           <AptDetailPanel
             apt={selectedApt}
@@ -3100,6 +3836,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                   fontSize: 14,
                   fontWeight: 700,
                   color: C.text,
+                  fontFamily: "inherit",
                 }}
               >
                 ‹
@@ -3127,6 +3864,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                       fontSize: 12,
                       fontWeight: 700,
                       color: "#0f766e",
+                      fontFamily: "inherit",
                     }}
                   >
                     Hoy
@@ -3143,6 +3881,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                     fontSize: 14,
                     fontWeight: 700,
                     color: C.text,
+                    fontFamily: "inherit",
                   }}
                 >
                   ›
@@ -3150,7 +3889,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
               </div>
             </div>
             <div style={{ overflowX: "auto" }}>
-              <div style={{ minWidth: 760 }}>
+              <div style={{ minWidth: 600 }}>
                 <div
                   style={{
                     display: "grid",
@@ -3169,7 +3908,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                       <div
                         key={i}
                         style={{
-                          padding: "10px 8px",
+                          padding: "8px 4px",
                           textAlign: "center",
                           borderLeft: `1px solid ${C.border}`,
                           background: isToday ? C.accent + "10" : "transparent",
@@ -3177,7 +3916,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                       >
                         <div
                           style={{
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: 600,
                             color: isToday ? "#0f766e" : C.textMuted,
                             textTransform: "uppercase",
@@ -3188,16 +3927,16 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                         </div>
                         <div
                           style={{
-                            width: 32,
-                            height: 32,
+                            width: 28,
+                            height: 28,
                             borderRadius: "50%",
                             background: isToday ? C.accent : "transparent",
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            margin: "4px auto 2px",
+                            margin: "3px auto",
                             fontWeight: 800,
-                            fontSize: 16,
+                            fontSize: 14,
                             color: isToday ? "#fff" : C.text,
                           }}
                         >
@@ -3206,11 +3945,11 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                         {dayApts > 0 && (
                           <div
                             style={{
-                              fontSize: 10,
+                              fontSize: 9,
                               background: isToday ? "#0f766e" : C.info,
                               color: "#fff",
                               borderRadius: 100,
-                              padding: "1px 6px",
+                              padding: "1px 5px",
                               display: "inline-block",
                               fontWeight: 700,
                             }}
@@ -3222,7 +3961,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                     );
                   })}
                 </div>
-                <div style={{ overflowY: "auto", maxHeight: 480 }}>
+                <div style={{ overflowY: "auto", maxHeight: 440 }}>
                   {HOURS.map((h) => (
                     <div
                       key={h}
@@ -3230,16 +3969,15 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                         display: "grid",
                         gridTemplateColumns: "52px repeat(7,1fr)",
                         borderBottom: `1px solid ${C.border}`,
-                        minHeight: 64,
+                        minHeight: 56,
                       }}
                     >
                       <div
                         style={{
-                          padding: "8px 4px 0 10px",
-                          fontSize: 11,
+                          padding: "6px 4px 0 10px",
+                          fontSize: 10,
                           color: C.textDim,
                           fontWeight: 600,
-                          flexShrink: 0,
                         }}
                       >
                         {h > 12 ? `${h - 12}pm` : h === 12 ? "12pm" : `${h}am`}
@@ -3259,25 +3997,15 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                             }
                             style={{
                               borderLeft: `1px solid ${C.border}`,
-                              padding: "4px 5px",
+                              padding: "3px 4px",
                               background: isToday
                                 ? C.accent + "04"
                                 : "transparent",
                               display: "flex",
                               flexDirection: "column",
-                              gap: 3,
+                              gap: 2,
                               cursor: "cell",
                             }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background = isToday
-                                ? C.accent + "10"
-                                : C.accent + "07")
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = isToday
-                                ? C.accent + "04"
-                                : "transparent")
-                            }
                           >
                             {apts.map((a, ai) => (
                               <div
@@ -3291,19 +4019,12 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                                   borderLeft: `2.5px solid ${
                                     STATUS_COLOR[a.status] || C.border
                                   }`,
-                                  borderRadius: "0 6px 6px 0",
-                                  padding: "3px 6px",
+                                  borderRadius: "0 5px 5px 0",
+                                  padding: "2px 5px",
                                   cursor: "pointer",
-                                  fontSize: 11,
+                                  fontSize: 10,
                                   lineHeight: 1.3,
-                                  transition: "opacity .15s",
                                 }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.opacity = ".75")
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.opacity = "1")
-                                }
                               >
                                 <div
                                   style={{
@@ -3337,7 +4058,14 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
             </div>
           </Card>
         </div>
-        {selectedApt && (
+        {selectedApt && !isMobile && (
+          <AptDetailPanel
+            apt={selectedApt}
+            onClose={() => setSelectedApt(null)}
+            onCycle={cycleStatus}
+          />
+        )}
+        {selectedApt && isMobile && (
           <AptDetailPanel
             apt={selectedApt}
             onClose={() => setSelectedApt(null)}
@@ -3397,6 +4125,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                   fontSize: 14,
                   fontWeight: 700,
                   color: C.text,
+                  fontFamily: "inherit",
                 }}
               >
                 ‹
@@ -3421,6 +4150,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                       fontSize: 12,
                       color: C.accent,
                       fontWeight: 700,
+                      fontFamily: "inherit",
                     }}
                   >
                     ← Volver a hoy
@@ -3438,6 +4168,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                   fontSize: 14,
                   fontWeight: 700,
                   color: C.text,
+                  fontFamily: "inherit",
                 }}
               >
                 ›
@@ -3454,9 +4185,9 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                 <div
                   key={d}
                   style={{
-                    padding: "10px 0",
+                    padding: "8px 0",
                     textAlign: "center",
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: 700,
                     color: C.textMuted,
                     textTransform: "uppercase",
@@ -3476,7 +4207,7 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                     <div
                       key={i}
                       style={{
-                        minHeight: 100,
+                        minHeight: isMobile ? 60 : 90,
                         borderRight: `1px solid ${C.border}`,
                         borderBottom: `1px solid ${C.border}`,
                         background: "#FAFBFC",
@@ -3485,44 +4216,33 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                   );
                 const { dayNum, ds, isToday, isPast } = cell;
                 const apts = getMonthApts(ds);
-                const MAX_SHOW = 3;
+                const MAX_SHOW = isMobile ? 1 : 3;
                 return (
                   <div
                     key={i}
                     onClick={() => onAdd({ date: ds })}
                     style={{
-                      minHeight: 100,
+                      minHeight: isMobile ? 60 : 90,
                       borderRight: `1px solid ${C.border}`,
                       borderBottom: `1px solid ${C.border}`,
-                      padding: "8px 6px",
+                      padding: isMobile ? "4px 3px" : "8px 6px",
                       background: isToday ? C.accent + "08" : "transparent",
                       cursor: "cell",
-                      transition: "background .15s",
                     }}
-                    onMouseEnter={(e) =>
-                      (e.currentTarget.style.background = isToday
-                        ? C.accent + "14"
-                        : C.accent + "06")
-                    }
-                    onMouseLeave={(e) =>
-                      (e.currentTarget.style.background = isToday
-                        ? C.accent + "08"
-                        : "transparent")
-                    }
                   >
                     <div
                       style={{
-                        width: 26,
-                        height: 26,
+                        width: isMobile ? 22 : 26,
+                        height: isMobile ? 22 : 26,
                         borderRadius: "50%",
                         background: isToday ? C.accent : "transparent",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontWeight: isToday || apts.length > 0 ? 700 : 400,
-                        fontSize: 13,
+                        fontWeight: isToday ? 700 : 400,
+                        fontSize: isMobile ? 11 : 13,
                         color: isToday ? "#fff" : isPast ? C.textDim : C.text,
-                        marginBottom: 4,
+                        marginBottom: 3,
                       }}
                     >
                       {dayNum}
@@ -3544,14 +4264,13 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                           style={{
                             background: STATUS_COLOR[a.status] + "22",
                             borderLeft: `2px solid ${STATUS_COLOR[a.status]}`,
-                            borderRadius: "0 5px 5px 0",
-                            padding: "2px 5px",
-                            fontSize: 10,
+                            borderRadius: "0 4px 4px 0",
+                            padding: "1px 4px",
+                            fontSize: 9,
                             fontWeight: 600,
                             overflow: "hidden",
                             textOverflow: "ellipsis",
                             whiteSpace: "nowrap",
-                            lineHeight: 1.4,
                             cursor: "pointer",
                           }}
                         >
@@ -3561,53 +4280,19 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
                       {apts.length > MAX_SHOW && (
                         <div
                           style={{
-                            fontSize: 10,
+                            fontSize: 9,
                             color: C.accent,
                             fontWeight: 700,
-                            paddingLeft: 4,
+                            paddingLeft: 3,
                           }}
                         >
-                          +{apts.length - MAX_SHOW} más
+                          +{apts.length - MAX_SHOW}
                         </div>
                       )}
                     </div>
                   </div>
                 );
               })}
-            </div>
-            <div
-              style={{
-                padding: "12px 20px",
-                borderTop: `1px solid ${C.border}`,
-                display: "flex",
-                gap: 16,
-                flexWrap: "wrap",
-              }}
-            >
-              {Object.entries(STATUS_COLOR).map(([s, c]) => (
-                <div
-                  key={s}
-                  style={{ display: "flex", alignItems: "center", gap: 5 }}
-                >
-                  <div
-                    style={{
-                      width: 10,
-                      height: 10,
-                      borderRadius: 3,
-                      background: c,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 11,
-                      color: C.textMuted,
-                      fontWeight: 600,
-                    }}
-                  >
-                    {s}
-                  </span>
-                </div>
-              ))}
             </div>
           </Card>
         </div>
@@ -3622,258 +4307,29 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
     );
   };
 
-  const ListView = () => {
-    const [statusFilter, setStatusFilter] = useState("Todos");
-    const filtered = appointments.filter(
-      (a) => statusFilter === "Todos" || a.status === statusFilter
-    );
-    const grouped = filtered.reduce((acc, a) => {
-      (acc[a.date] = acc[a.date] || []).push(a);
-      return acc;
-    }, {});
-    const sortedDates = Object.keys(grouped).sort();
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[
-            "Todos",
-            "Confirmado",
-            "En espera",
-            "En consulta",
-            "Pendiente",
-            "Completado",
-            "Cancelado",
-          ].map((f) => (
-            <button
-              key={f}
-              onClick={() => setStatusFilter(f)}
-              style={{
-                background: statusFilter === f ? C.accentDim : C.surface,
-                color: statusFilter === f ? "#0f766e" : C.textMuted,
-                border: `1px solid ${statusFilter === f ? C.accent : C.border}`,
-                borderRadius: 8,
-                padding: "5px 12px",
-                cursor: "pointer",
-                fontSize: 12,
-                fontWeight: 600,
-              }}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        {sortedDates.length === 0 ? (
-          <Card>
-            <div
-              style={{ textAlign: "center", padding: 32, color: C.textMuted }}
-            >
-              No hay citas registradas.
-            </div>
-          </Card>
-        ) : (
-          sortedDates.map((date) => {
-            const d = new Date(date + "T00:00:00");
-            const isToday = date === todayStr;
-            return (
-              <div key={date}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    marginBottom: 8,
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 34,
-                      height: 34,
-                      borderRadius: 9,
-                      background: isToday ? C.accent : C.border + "60",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontWeight: 800,
-                      fontSize: 14,
-                      color: isToday ? "#fff" : C.textMuted,
-                    }}
-                  >
-                    {d.getDate()}
-                  </div>
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 13,
-                        textTransform: "capitalize",
-                      }}
-                    >
-                      {d.toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "long",
-                      })}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.textMuted }}>
-                      {grouped[date].length} cita
-                      {grouped[date].length !== 1 ? "s" : ""}
-                    </div>
-                  </div>
-                  {isToday && <Badge color={C.accent}>Hoy</Badge>}
-                </div>
-                <Card style={{ padding: 0 }}>
-                  {[...grouped[date]]
-                    .sort((a, b) => a.time.localeCompare(b.time))
-                    .map((a, i) => (
-                      <div
-                        key={i}
-                        onClick={() => setSelectedApt(a)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 14,
-                          padding: "12px 20px",
-                          borderBottom:
-                            i < grouped[date].length - 1
-                              ? `1px solid ${C.border}`
-                              : "none",
-                          cursor: "pointer",
-                          transition: "background .15s",
-                        }}
-                        onMouseEnter={(e) =>
-                          (e.currentTarget.style.background = C.surfaceHover)
-                        }
-                        onMouseLeave={(e) =>
-                          (e.currentTarget.style.background = "transparent")
-                        }
-                      >
-                        <div style={{ fontSize: 22 }}>{a.avatar}</div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 600, fontSize: 14 }}>
-                            {a.pet}{" "}
-                            <span
-                              style={{
-                                color: C.textMuted,
-                                fontWeight: 400,
-                                fontSize: 13,
-                              }}
-                            >
-                              — {a.owner}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: 12, color: C.textMuted }}>
-                            {a.type}
-                          </div>
-                        </div>
-                        <div
-                          style={{
-                            fontWeight: 800,
-                            fontSize: 14,
-                            color: "#0f766e",
-                            minWidth: 40,
-                            textAlign: "right",
-                          }}
-                        >
-                          {a.time}
-                        </div>
-                        <Badge color={STATUS_COLOR[a.status]}>{a.status}</Badge>
-                        {a.status !== "Cancelado" &&
-                          a.status !== "Completado" && (
-                            <button
-                              onClick={(e) => cycleStatus(a, e)}
-                              style={{
-                                background: "transparent",
-                                border: `1px solid ${C.border}`,
-                                color: C.text,
-                                borderRadius: 6,
-                                padding: "4px 10px",
-                                cursor: "pointer",
-                                fontSize: 12,
-                                fontWeight: 600,
-                              }}
-                            >
-                              →
-                            </button>
-                          )}
-                        {a.status !== "Cancelado" && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              cancelApt(a);
-                            }}
-                            style={{
-                              background: C.warning + "15",
-                              border: `1px solid ${C.warning}30`,
-                              color: "#92400e",
-                              borderRadius: 6,
-                              padding: "4px 10px",
-                              cursor: "pointer",
-                              fontSize: 12,
-                              fontWeight: 600,
-                            }}
-                          >
-                            ✕
-                          </button>
-                        )}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteApt(a);
-                          }}
-                          style={{
-                            background: C.danger + "10",
-                            border: `1px solid ${C.danger}25`,
-                            color: C.danger,
-                            borderRadius: 6,
-                            padding: "4px 10px",
-                            cursor: "pointer",
-                            fontSize: 12,
-                            fontWeight: 600,
-                          }}
-                        >
-                          🗑
-                        </button>
-                      </div>
-                    ))}
-                </Card>
-              </div>
-            );
-          })
-        )}
-      </div>
-    );
-  };
-
-  const todayApts = appointments.filter((a) => a.date === todayStr).length;
-  const weekApts = (() => {
-    const d = new Date(today);
-    d.setDate(d.getDate() + 7);
-    return appointments.filter((a) => {
-      const ad = new Date(a.date + "T00:00:00");
-      return ad >= today && ad <= d;
-    }).length;
-  })();
-  const pendingApts = appointments.filter(
-    (a) => a.status === "Pendiente" || a.status === "En espera"
-  ).length;
-
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: isMobile ? 14 : 20,
+      }}
     >
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: 10,
         }}
       >
         <div>
           <div
             style={{
               fontFamily: "'Playfair Display',serif",
-              fontSize: 26,
+              fontSize: isMobile ? 22 : 26,
               fontWeight: 700,
             }}
           >
@@ -3883,8 +4339,55 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
             {appointments.length} citas registradas
           </div>
         </div>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <ViewTabs />
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* View tabs */}
+          <div
+            style={{
+              display: "flex",
+              background: C.bg,
+              borderRadius: 10,
+              padding: 3,
+              gap: 2,
+            }}
+          >
+            {(isMobile
+              ? [
+                  ["Lista", "☰"],
+                  ["Mes", "🗓"],
+                ]
+              : [
+                  ["Hoy", "📋"],
+                  ["Semana", "📅"],
+                  ["Mes", "🗓"],
+                  ["Lista", "☰"],
+                ]
+            ).map(([v, icon]) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                style={{
+                  padding: "6px 12px",
+                  borderRadius: 8,
+                  border: "none",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  background: view === v ? C.surface : "transparent",
+                  color: view === v ? C.text : C.textMuted,
+                  fontFamily: "inherit",
+                }}
+              >
+                {icon} {v}
+              </button>
+            ))}
+          </div>
           <button
             onClick={onAdd}
             style={{
@@ -3892,28 +4395,30 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
               color: "#000",
               border: "none",
               borderRadius: 10,
-              padding: "10px 20px",
+              padding: "9px 16px",
               fontWeight: 700,
               cursor: "pointer",
-              fontSize: 14,
+              fontSize: 13,
+              fontFamily: "inherit",
             }}
           >
             + Nueva Cita
           </button>
         </div>
       </div>
+
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(3,1fr)",
-          gap: 12,
+          gap: isMobile ? 8 : 12,
         }}
       >
         {[
-          { label: "Citas hoy", value: todayApts, icon: "☀️", color: C.accent },
-          { label: "Esta semana", value: weekApts, icon: "📅", color: C.info },
+          { label: "Hoy", value: todayApts, icon: "☀️", color: C.accent },
+          { label: "Semana", value: weekApts, icon: "📅", color: C.info },
           {
-            label: "Pendientes / En espera",
+            label: "Pendientes",
             value: pendingApts,
             icon: "⏳",
             color: C.warning,
@@ -3925,19 +4430,29 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: 12,
-              padding: "14px 18px",
+              padding: isMobile ? "10px 12px" : "14px 18px",
               display: "flex",
               alignItems: "center",
-              gap: 14,
+              gap: isMobile ? 8 : 14,
             }}
           >
-            <div style={{ fontSize: 28 }}>{s.icon}</div>
+            <div style={{ fontSize: isMobile ? 20 : 28 }}>{s.icon}</div>
             <div>
-              <div style={{ fontSize: 24, fontWeight: 800, color: s.color }}>
+              <div
+                style={{
+                  fontSize: isMobile ? 18 : 24,
+                  fontWeight: 800,
+                  color: s.color,
+                }}
+              >
                 {s.value}
               </div>
               <div
-                style={{ fontSize: 12, color: C.textMuted, fontWeight: 600 }}
+                style={{
+                  fontSize: isMobile ? 10 : 12,
+                  color: C.textMuted,
+                  fontWeight: 600,
+                }}
               >
                 {s.label}
               </div>
@@ -3945,16 +4460,18 @@ function AppointmentsPage({ appointments, onAdd, onUpdate }) {
           </div>
         ))}
       </div>
-      {view === "Hoy" && <TodayView />}
+
+      {view === "Lista" && <ListView />}
       {view === "Semana" && <WeekView />}
       {view === "Mes" && <MonthView />}
-      {view === "Lista" && <ListView />}
+      {view === "Hoy" && <ListView />}
     </div>
   );
 }
 
 // ─── PATIENTS PAGE ────────────────────────────────────────────────────────────
 function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const filtered = pets.filter(
     (p) =>
@@ -3966,10 +4483,15 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
     Internado: C.danger,
     Seguimiento: C.warning,
   };
+
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: isMobile ? 14 : 20,
+      }}
     >
       <div
         style={{
@@ -3981,8 +4503,8 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
         <div>
           <div
             style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 26,
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 22 : 26,
               fontWeight: 700,
             }}
           >
@@ -3999,23 +4521,25 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
             color: "#000",
             border: "none",
             borderRadius: 10,
-            padding: "10px 22px",
+            padding: isMobile ? "8px 14px" : "10px 22px",
             fontWeight: 700,
             cursor: "pointer",
-            fontSize: 14,
+            fontSize: isMobile ? 13 : 14,
+            fontFamily: "inherit",
           }}
         >
-          + Nuevo Paciente
+          + Nuevo
         </button>
       </div>
+
       <div style={{ position: "relative" }}>
         <span
           style={{
             position: "absolute",
-            left: 16,
+            left: 14,
             top: "50%",
             transform: "translateY(-50%)",
-            fontSize: 16,
+            fontSize: 15,
           }}
         >
           🔍
@@ -4026,21 +4550,23 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
           placeholder="Buscar por nombre o propietario..."
           style={{
             width: "100%",
-            padding: "12px 16px 12px 44px",
+            padding: "11px 14px 11px 40px",
             background: C.surface,
             border: `1px solid ${C.border}`,
             borderRadius: 10,
             color: C.text,
             fontSize: 14,
             outline: "none",
+            fontFamily: "inherit",
           }}
         />
       </div>
+
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3,1fr)",
-          gap: 16,
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+          gap: isMobile ? 10 : 16,
         }}
       >
         {filtered.map((p, i) => (
@@ -4052,14 +4578,15 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: 16,
-              padding: 20,
+              padding: isMobile ? 14 : 20,
               cursor: "pointer",
-              transition: "border-color .2s, transform .2s",
+              transition: "border-color .2s,transform .2s",
               boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.borderColor = p.color;
-              e.currentTarget.style.transform = "translateY(-2px)";
+              if (!isMobile)
+                e.currentTarget.style.transform = "translateY(-2px)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = C.border;
@@ -4070,36 +4597,40 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
-                marginBottom: 14,
+                marginBottom: 12,
+                alignItems: "center",
               }}
             >
-              <div
-                style={{
-                  width: 56,
-                  height: 56,
-                  borderRadius: 14,
-                  background: p.color + "15",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 28,
-                  border: `2px solid ${p.color}20`,
-                }}
-              >
-                {p.avatar}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: 12,
+                    background: p.color + "15",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    border: `2px solid ${p.color}20`,
+                  }}
+                >
+                  {p.avatar}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>{p.name}</div>
+                  <div style={{ color: C.textMuted, fontSize: 12 }}>
+                    {p.breed} · {p.species}
+                  </div>
+                </div>
               </div>
               <Badge color={statusColor[p.status]}>{p.status}</Badge>
             </div>
-            <div style={{ fontWeight: 700, fontSize: 18 }}>{p.name}</div>
-            <div style={{ color: C.textMuted, fontSize: 13, marginTop: 2 }}>
-              {p.breed} · {p.species}
-            </div>
             <div
               style={{
-                marginTop: 14,
                 display: "grid",
                 gridTemplateColumns: "1fr 1fr",
-                gap: 8,
+                gap: 6,
               }}
             >
               {[
@@ -4111,7 +4642,7 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
                 <div key={k}>
                   <div
                     style={{
-                      fontSize: 10,
+                      fontSize: 9,
                       color: C.textDim,
                       textTransform: "uppercase",
                       letterSpacing: ".5px",
@@ -4123,7 +4654,7 @@ function PatientsPage({ pets, vaccines, visits, onSelect, onAdd }) {
                     style={{
                       fontSize: 12,
                       fontWeight: 600,
-                      marginTop: 2,
+                      marginTop: 1,
                       color: C.textMuted,
                     }}
                   >
@@ -4151,6 +4682,7 @@ function PatientDetail({
   onUpdatePet,
   onDelete,
 }) {
+  const isMobile = useIsMobile();
   const [tab, setTab] = useState("info");
   const [confirm, setConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -4161,14 +4693,15 @@ function PatientDetail({
     ["vacunas", "💉 Vacunas"],
     ["citas", "📅 Citas"],
   ];
-  const handleSaveEdit = () => {
-    onUpdatePet(editForm);
-    setIsEditing(false);
-  };
+
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: isMobile ? 14 : 20,
+      }}
     >
       <button
         onClick={onBack}
@@ -4182,22 +4715,32 @@ function PatientDetail({
           fontSize: 13,
           width: "fit-content",
           fontWeight: 600,
+          fontFamily: "inherit",
         }}
       >
         ← Volver
       </button>
-      <Card style={{ display: "flex", alignItems: "center", gap: 24 }}>
+
+      <Card
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: isMobile ? 14 : 24,
+          padding: isMobile ? 16 : 24,
+        }}
+      >
         <div
           style={{
-            width: 80,
-            height: 80,
-            borderRadius: 20,
+            width: isMobile ? 60 : 80,
+            height: isMobile ? 60 : 80,
+            borderRadius: 16,
             background: pet.color + "15",
             border: `2px solid ${pet.color}30`,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 44,
+            fontSize: isMobile ? 32 : 44,
+            flexShrink: 0,
           }}
         >
           {pet.avatar}
@@ -4205,18 +4748,18 @@ function PatientDetail({
         <div style={{ flex: 1 }}>
           <div
             style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 28,
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 22 : 28,
               fontWeight: 700,
             }}
           >
             {pet.name}
           </div>
-          <div style={{ color: C.textMuted, fontSize: 14 }}>
+          <div style={{ color: C.textMuted, fontSize: 13 }}>
             {pet.breed} · {pet.species}
           </div>
           <div
-            style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}
+            style={{ display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap" }}
           >
             {[
               `🎂 ${pet.age}`,
@@ -4229,8 +4772,8 @@ function PatientDetail({
                   background: C.bg,
                   border: `1px solid ${C.border}`,
                   borderRadius: 100,
-                  padding: "3px 12px",
-                  fontSize: 12,
+                  padding: "2px 10px",
+                  fontSize: 11,
                   color: C.textMuted,
                   fontWeight: 600,
                 }}
@@ -4241,11 +4784,13 @@ function PatientDetail({
           </div>
         </div>
       </Card>
+
       <div
         style={{
           display: "flex",
-          gap: 4,
+          gap: 0,
           borderBottom: `1px solid ${C.border}`,
+          overflowX: "auto",
         }}
       >
         {tabs.map(([key, label]) => (
@@ -4253,8 +4798,8 @@ function PatientDetail({
             key={key}
             onClick={() => setTab(key)}
             style={{
-              padding: "10px 18px",
-              fontSize: 13,
+              padding: isMobile ? "9px 12px" : "10px 18px",
+              fontSize: isMobile ? 12 : 13,
               fontWeight: 600,
               cursor: "pointer",
               border: "none",
@@ -4264,17 +4809,24 @@ function PatientDetail({
                 tab === key ? "#0f766e" : "transparent"
               }`,
               marginBottom: -1,
+              whiteSpace: "nowrap",
+              fontFamily: "inherit",
             }}
           >
             {label}
           </button>
         ))}
       </div>
+
       {tab === "info" && (
         <div
-          style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? 14 : 20,
+          }}
         >
-          <Card>
+          <Card style={{ padding: isMobile ? 16 : 24 }}>
             <div
               style={{
                 display: "flex",
@@ -4296,6 +4848,7 @@ function PatientDetail({
                     color: C.accent,
                     fontWeight: 600,
                     fontSize: 13,
+                    fontFamily: "inherit",
                   }}
                 >
                   ✏️ Editar
@@ -4303,9 +4856,7 @@ function PatientDetail({
               )}
             </div>
             {isEditing ? (
-              <div
-                style={{ display: "flex", flexDirection: "column", gap: 10 }}
-              >
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                 {[
                   ["Nombre", "name"],
                   ["Especie", "species"],
@@ -4313,12 +4864,11 @@ function PatientDetail({
                   ["Color de pelaje", "coatColor"],
                   ["Edad", "age"],
                   ["Peso", "weight"],
-                  ["Estado", "status"],
                 ].map(([label, field]) => (
                   <Input
                     key={field}
                     label={label}
-                    value={editForm[field]}
+                    value={editForm[field] || ""}
                     onChange={(e) =>
                       setEditForm({ ...editForm, [field]: e.target.value })
                     }
@@ -4340,7 +4890,7 @@ function PatientDetail({
                   style={{
                     display: "flex",
                     justifyContent: "space-between",
-                    padding: "10px 0",
+                    padding: "9px 0",
                     borderBottom: `1px solid ${C.border}`,
                   }}
                 >
@@ -4350,17 +4900,18 @@ function PatientDetail({
               ))
             )}
           </Card>
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <Card>
-              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16 }}>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <Card style={{ padding: isMobile ? 16 : 24 }}>
+              <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
                 Propietario
               </div>
               {isEditing ? (
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
                 >
                   <Input
-                    label="Nombre del Dueño"
+                    label="Nombre"
                     value={editForm.owner}
                     onChange={(e) =>
                       setEditForm({ ...editForm, owner: e.target.value })
@@ -4393,7 +4944,7 @@ function PatientDetail({
                     style={{
                       display: "flex",
                       justifyContent: "space-between",
-                      padding: "10px 0",
+                      padding: "9px 0",
                       borderBottom: `1px solid ${C.border}`,
                     }}
                   >
@@ -4405,7 +4956,7 @@ function PatientDetail({
                 ))
               )}
               {isEditing && (
-                <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
                   <button
                     onClick={() => {
                       setEditForm(pet);
@@ -4418,12 +4969,16 @@ function PatientDetail({
                       border: `1px solid ${C.border}`,
                       borderRadius: 8,
                       cursor: "pointer",
+                      fontFamily: "inherit",
                     }}
                   >
                     Cancelar
                   </button>
                   <button
-                    onClick={handleSaveEdit}
+                    onClick={() => {
+                      onUpdatePet(editForm);
+                      setIsEditing(false);
+                    }}
                     style={{
                       flex: 1,
                       padding: "8px",
@@ -4432,6 +4987,7 @@ function PatientDetail({
                       borderRadius: 8,
                       fontWeight: 700,
                       cursor: "pointer",
+                      fontFamily: "inherit",
                     }}
                   >
                     Guardar
@@ -4439,7 +4995,7 @@ function PatientDetail({
                 </div>
               )}
             </Card>
-            <Card>
+            <Card style={{ padding: isMobile ? 14 : 24 }}>
               <div
                 style={{
                   fontWeight: 700,
@@ -4462,12 +5018,20 @@ function PatientDetail({
                     cursor: "pointer",
                     fontWeight: 600,
                     fontSize: 13,
+                    fontFamily: "inherit",
                   }}
                 >
                   🗑 Eliminar paciente
                 </button>
               ) : (
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    gap: 8,
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <span style={{ fontSize: 12, color: C.textMuted }}>
                     ¿Seguro?
                   </span>
@@ -4482,6 +5046,7 @@ function PatientDetail({
                       cursor: "pointer",
                       fontWeight: 600,
                       fontSize: 12,
+                      fontFamily: "inherit",
                     }}
                   >
                     Sí, eliminar
@@ -4496,6 +5061,7 @@ function PatientDetail({
                       padding: "6px 14px",
                       cursor: "pointer",
                       fontSize: 12,
+                      fontFamily: "inherit",
                     }}
                   >
                     Cancelar
@@ -4506,13 +5072,14 @@ function PatientDetail({
           </div>
         </div>
       )}
+
       {tab === "Consultas" && (
         <div>
           <div
             style={{
               display: "flex",
               justifyContent: "flex-end",
-              marginBottom: 16,
+              marginBottom: 14,
             }}
           >
             <button
@@ -4522,10 +5089,11 @@ function PatientDetail({
                 color: "#000",
                 border: "none",
                 borderRadius: 8,
-                padding: "8px 18px",
+                padding: "8px 16px",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontSize: 13,
+                fontFamily: "inherit",
               }}
             >
               + Agregar consulta
@@ -4533,7 +5101,7 @@ function PatientDetail({
           </div>
           {visits.length === 0 ? (
             <div
-              style={{ textAlign: "center", padding: 48, color: C.textMuted }}
+              style={{ textAlign: "center", padding: 40, color: C.textMuted }}
             >
               Sin consultas registradas
             </div>
@@ -4560,7 +5128,7 @@ function PatientDetail({
                     style={{
                       position: "relative",
                       paddingLeft: 44,
-                      marginBottom: 20,
+                      marginBottom: 16,
                     }}
                   >
                     <div
@@ -4575,10 +5143,10 @@ function PatientDetail({
                         border: `3px solid ${C.surface}`,
                       }}
                     />
-                    <Card style={{ padding: 16 }}>
+                    <Card style={{ padding: 14 }}>
                       <div
                         style={{
-                          fontSize: 12,
+                          fontSize: 11,
                           color: C.textMuted,
                           marginBottom: 4,
                           fontWeight: 600,
@@ -4586,7 +5154,12 @@ function PatientDetail({
                       >
                         {v.date}
                       </div>
-                      <div style={{ fontWeight: 700, marginBottom: 8 }}>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          marginBottom: v.diagnosis ? 6 : 0,
+                        }}
+                      >
                         {v.type}
                       </div>
                       {v.diagnosis && (
@@ -4601,13 +5174,14 @@ function PatientDetail({
           )}
         </div>
       )}
+
       {tab === "vacunas" && (
         <div>
           <div
             style={{
               display: "flex",
               justifyContent: "flex-end",
-              marginBottom: 16,
+              marginBottom: 14,
             }}
           >
             <button
@@ -4617,103 +5191,152 @@ function PatientDetail({
                 color: "#fff",
                 border: "none",
                 borderRadius: 8,
-                padding: "8px 18px",
+                padding: "8px 16px",
                 fontWeight: 700,
                 cursor: "pointer",
                 fontSize: 13,
+                fontFamily: "inherit",
               }}
             >
               + Agregar vacuna
             </button>
           </div>
-          <Card style={{ padding: 0 }}>
-            <table style={{ width: "100%", borderCollapse: "collapse" }}>
-              <thead>
-                <tr style={{ borderBottom: `1px solid ${C.border}` }}>
-                  {[
-                    "Vacuna",
-                    "Aplicada",
-                    "Próxima dosis",
-                    "Lote",
-                    "Estado",
-                  ].map((h) => (
-                    <th
-                      key={h}
+          {isMobile ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {vaccines.length === 0 ? (
+                <div
+                  style={{
+                    textAlign: "center",
+                    padding: 40,
+                    color: C.textMuted,
+                  }}
+                >
+                  Sin vacunas registradas
+                </div>
+              ) : (
+                vaccines.map((v, i) => (
+                  <Card key={i} style={{ padding: 14 }}>
+                    <div
                       style={{
-                        padding: "14px 20px",
-                        textAlign: "left",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: C.textMuted,
-                        textTransform: "uppercase",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: 8,
                       }}
                     >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {vaccines.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      style={{
-                        padding: 32,
-                        textAlign: "center",
-                        color: C.textMuted,
-                      }}
-                    >
-                      Sin vacunas registradas
-                    </td>
+                      <div style={{ fontWeight: 700 }}>💉 {v.name}</div>
+                      <Badge
+                        color={v.status === "vencida" ? C.danger : C.accent}
+                      >
+                        {v.status}
+                      </Badge>
+                    </div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>
+                      Aplicada: <strong>{v.date}</strong>
+                    </div>
+                    <div style={{ fontSize: 12, color: C.textMuted }}>
+                      Próxima: <strong>{v.nextDue}</strong>
+                    </div>
+                    {v.lot && (
+                      <div style={{ fontSize: 12, color: C.textMuted }}>
+                        Lote: {v.lot}
+                      </div>
+                    )}
+                  </Card>
+                ))
+              )}
+            </div>
+          ) : (
+            <Card style={{ padding: 0 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${C.border}` }}>
+                    {[
+                      "Vacuna",
+                      "Aplicada",
+                      "Próxima dosis",
+                      "Lote",
+                      "Estado",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        style={{
+                          padding: "14px 20px",
+                          textAlign: "left",
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: C.textMuted,
+                          textTransform: "uppercase",
+                        }}
+                      >
+                        {h}
+                      </th>
+                    ))}
                   </tr>
-                ) : (
-                  vaccines.map((v, i) => (
-                    <tr
-                      key={i}
-                      style={{ borderBottom: `1px solid ${C.border}` }}
-                    >
-                      <td style={{ padding: "14px 20px", fontWeight: 600 }}>
-                        💉 {v.name}
-                      </td>
+                </thead>
+                <tbody>
+                  {vaccines.length === 0 ? (
+                    <tr>
                       <td
+                        colSpan={5}
                         style={{
-                          padding: "14px 20px",
-                          fontSize: 13,
+                          padding: 32,
+                          textAlign: "center",
                           color: C.textMuted,
                         }}
                       >
-                        {v.date}
-                      </td>
-                      <td style={{ padding: "14px 20px", fontSize: 13 }}>
-                        {v.nextDue}
-                      </td>
-                      <td
-                        style={{
-                          padding: "14px 20px",
-                          fontSize: 13,
-                          color: C.textMuted,
-                        }}
-                      >
-                        {v.lot || "—"}
-                      </td>
-                      <td style={{ padding: "14px 20px" }}>
-                        <Badge
-                          color={v.status === "vencida" ? C.danger : C.accent}
-                        >
-                          {v.status}
-                        </Badge>
+                        Sin vacunas registradas
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </Card>
+                  ) : (
+                    vaccines.map((v, i) => (
+                      <tr
+                        key={i}
+                        style={{ borderBottom: `1px solid ${C.border}` }}
+                      >
+                        <td style={{ padding: "14px 20px", fontWeight: 600 }}>
+                          💉 {v.name}
+                        </td>
+                        <td
+                          style={{
+                            padding: "14px 20px",
+                            fontSize: 13,
+                            color: C.textMuted,
+                          }}
+                        >
+                          {v.date}
+                        </td>
+                        <td style={{ padding: "14px 20px", fontSize: 13 }}>
+                          {v.nextDue}
+                        </td>
+                        <td
+                          style={{
+                            padding: "14px 20px",
+                            fontSize: 13,
+                            color: C.textMuted,
+                          }}
+                        >
+                          {v.lot || "—"}
+                        </td>
+                        <td style={{ padding: "14px 20px" }}>
+                          <Badge
+                            color={v.status === "vencida" ? C.danger : C.accent}
+                          >
+                            {v.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </Card>
+          )}
         </div>
       )}
+
       {tab === "citas" && (
-        <Card>
+        <Card style={{ padding: isMobile ? 14 : 24 }}>
           {appointments.length === 0 ? (
             <div style={{ color: C.textMuted, fontSize: 13 }}>
               Sin citas programadas
@@ -4726,7 +5349,7 @@ function PatientDetail({
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "12px 0",
+                  padding: "11px 0",
                   borderBottom:
                     i < appointments.length - 1
                       ? `1px solid ${C.border}`
@@ -4760,6 +5383,7 @@ function RecordsPage({
   onUpdateVisits,
   onUpdateVaccines,
 }) {
+  const isMobile = useIsMobile();
   const [search, setSearch] = useState("");
   const [selectedPetId, setSelectedPetId] = useState(null);
   const [editingVisit, setEditingVisit] = useState(null);
@@ -4767,6 +5391,7 @@ function RecordsPage({
   const [addingVisit, setAddingVisit] = useState(false);
   const [addingVaccine, setAddingVaccine] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [showPatientList, setShowPatientList] = useState(true);
   const fileInputRef = useRef(null);
 
   const filtered = useMemo(() => {
@@ -4779,7 +5404,6 @@ function RecordsPage({
         p.breed?.toLowerCase().includes(q)
     );
   }, [pets, search]);
-
   const selectedPet = pets.find((p) => p.id === selectedPetId);
   const petVisits = selectedPetId
     ? visits.filter((v) => v.petId === selectedPetId)
@@ -4790,7 +5414,6 @@ function RecordsPage({
   const petResults = selectedPetId
     ? results.filter((r) => r.petId === selectedPetId)
     : [];
-
   const surgeries = petVisits.filter(
     (v) =>
       v.type?.toLowerCase().includes("cirugía") ||
@@ -4816,24 +5439,20 @@ function RecordsPage({
     await onUpdateVaccines(vaccines.filter((v) => v.id !== vaccineId));
     setDeleteConfirm(null);
   };
-  const handleSaveVisit = async (updatedVisit) => {
-    await onUpdateVisits(
-      visits.map((v) => (v.id === updatedVisit.id ? updatedVisit : v))
-    );
+  const handleSaveVisit = async (u) => {
+    await onUpdateVisits(visits.map((v) => (v.id === u.id ? u : v)));
     setEditingVisit(null);
   };
-  const handleSaveVaccine = async (updatedVaccine) => {
-    await onUpdateVaccines(
-      vaccines.map((v) => (v.id === updatedVaccine.id ? updatedVaccine : v))
-    );
+  const handleSaveVaccine = async (u) => {
+    await onUpdateVaccines(vaccines.map((v) => (v.id === u.id ? u : v)));
     setEditingVaccine(null);
   };
-  const handleAddNewVisit = async (newVisit) => {
-    await onUpdateVisits([newVisit, ...visits]);
+  const handleAddNewVisit = async (n) => {
+    await onUpdateVisits([n, ...visits]);
     setAddingVisit(false);
   };
-  const handleAddNewVaccine = async (newVaccine) => {
-    await onUpdateVaccines([newVaccine, ...vaccines]);
+  const handleAddNewVaccine = async (n) => {
+    await onUpdateVaccines([n, ...vaccines]);
     setAddingVaccine(false);
   };
 
@@ -4863,25 +5482,26 @@ function RecordsPage({
     background: color + "06",
     border: `1.5px solid ${color}20`,
     borderRadius: 14,
-    padding: 18,
-    marginBottom: 16,
+    padding: isMobile ? 14 : 18,
+    marginBottom: 14,
   });
   const ItemActions = ({ onEdit, id }) => (
-    <div style={{ display: "flex", gap: 6, marginLeft: "auto", flexShrink: 0 }}>
+    <div style={{ display: "flex", gap: 4, marginLeft: "auto", flexShrink: 0 }}>
       <button
         onClick={onEdit}
         style={{
           background: C.info + "15",
           border: `1px solid ${C.info}30`,
           borderRadius: 7,
-          padding: "4px 10px",
+          padding: "3px 8px",
           cursor: "pointer",
-          fontSize: 12,
+          fontSize: 11,
           color: C.info,
           fontWeight: 600,
+          fontFamily: "inherit",
         }}
       >
-        ✏️ Editar
+        ✏️
       </button>
       <button
         onClick={() => setDeleteConfirm(id)}
@@ -4889,11 +5509,12 @@ function RecordsPage({
           background: C.danger + "10",
           border: `1px solid ${C.danger}25`,
           borderRadius: 7,
-          padding: "4px 10px",
+          padding: "3px 8px",
           cursor: "pointer",
-          fontSize: 12,
+          fontSize: 11,
           color: C.danger,
           fontWeight: 600,
+          fontFamily: "inherit",
         }}
       >
         🗑
@@ -4901,10 +5522,21 @@ function RecordsPage({
     </div>
   );
 
+  // Mobile: show either list or detail, not both
+  const handleSelectPet = (petId) => {
+    setSelectedPetId(petId === selectedPetId ? null : petId);
+    if (isMobile) setShowPatientList(false);
+  };
+
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", gap: 24, height: "calc(100vh - 64px)" }}
+      style={{
+        display: "flex",
+        gap: isMobile ? 0 : 24,
+        height: isMobile ? "auto" : "calc(100vh - 64px)",
+        flexDirection: isMobile ? "column" : "row",
+      }}
     >
       {editingVisit && (
         <EditVisitModal
@@ -4940,8 +5572,7 @@ function RecordsPage({
           onClose={() => setDeleteConfirm(null)}
         >
           <p style={{ fontSize: 14, color: C.textMuted, marginBottom: 20 }}>
-            ¿Estás seguro de que deseas eliminar este registro? Esta acción no
-            se puede deshacer.
+            ¿Estás seguro de que deseas eliminar este registro?
           </p>
           <div style={{ display: "flex", gap: 10 }}>
             <button
@@ -4955,6 +5586,7 @@ function RecordsPage({
                 borderRadius: 10,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontFamily: "inherit",
               }}
             >
               Cancelar
@@ -4975,6 +5607,7 @@ function RecordsPage({
                 borderRadius: 10,
                 cursor: "pointer",
                 fontWeight: 700,
+                fontFamily: "inherit",
               }}
             >
               Sí, eliminar
@@ -4983,1004 +5616,978 @@ function RecordsPage({
         </ModalWrap>
       )}
 
-      <div
-        style={{
-          width: 280,
-          flexShrink: 0,
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
+      {/* Patient List Panel */}
+      {(!isMobile || showPatientList) && (
         <div
           style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: 22,
-            fontWeight: 700,
-          }}
-        >
-          Historial Clínico
-        </div>
-        <div style={{ position: "relative" }}>
-          <span
-            style={{
-              position: "absolute",
-              left: 12,
-              top: "50%",
-              transform: "translateY(-50%)",
-              fontSize: 14,
-            }}
-          >
-            🔍
-          </span>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar paciente..."
-            style={{
-              width: "100%",
-              padding: "9px 12px 9px 34px",
-              background: C.surface,
-              border: `1px solid ${C.border}`,
-              borderRadius: 10,
-              color: C.text,
-              fontSize: 13,
-              outline: "none",
-            }}
-          />
-        </div>
-        <div
-          style={{
-            fontSize: 11,
-            color: C.textMuted,
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: ".5px",
-          }}
-        >
-          {filtered.length} paciente{filtered.length !== 1 ? "s" : ""}
-        </div>
-        <div
-          style={{
-            overflowY: "auto",
-            flex: 1,
+            width: isMobile ? "100%" : 280,
+            flexShrink: 0,
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: 10,
           }}
         >
-          {filtered.length === 0 && (
-            <div
+          <div
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 20 : 22,
+              fontWeight: 700,
+            }}
+          >
+            Historial Clínico
+          </div>
+          <div style={{ position: "relative" }}>
+            <span
               style={{
-                textAlign: "center",
-                padding: 32,
-                color: C.textMuted,
+                position: "absolute",
+                left: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
                 fontSize: 13,
               }}
             >
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>Sin
-              pacientes registrados aún.
-            </div>
-          )}
-          {filtered.map((p) => {
-            const vCount = visits.filter((v) => v.petId === p.id).length;
-            const vacCount = vaccines.filter((v) => v.petId === p.id).length;
-            const isSelected = selectedPetId === p.id;
-            return (
-              <div
-                key={p.id}
-                onClick={() => setSelectedPetId(isSelected ? null : p.id)}
-                style={{
-                  background: isSelected ? p.color + "12" : C.surface,
-                  border: `1.5px solid ${isSelected ? p.color : C.border}`,
-                  borderRadius: 12,
-                  padding: "12px 14px",
-                  cursor: "pointer",
-                  transition: "all .15s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isSelected)
-                    e.currentTarget.style.borderColor = p.color + "80";
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) e.currentTarget.style.borderColor = C.border;
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: 10,
-                      background: p.color + "20",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 20,
-                    }}
-                  >
-                    {p.avatar}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 700, fontSize: 14 }}>
-                      {p.name}
-                    </div>
-                    <div style={{ fontSize: 11, color: C.textMuted }}>
-                      {p.owner}
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      background: C.info + "15",
-                      color: C.info,
-                      borderRadius: 6,
-                      padding: "2px 8px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    📋 {vCount} visita{vCount !== 1 ? "s" : ""}
-                  </span>
-                  <span
-                    style={{
-                      fontSize: 11,
-                      background: C.accent + "15",
-                      color: "#0f766e",
-                      borderRadius: 6,
-                      padding: "2px 8px",
-                      fontWeight: 600,
-                    }}
-                  >
-                    💉 {vacCount} vacuna{vacCount !== 1 ? "s" : ""}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        {!selectedPet ? (
+              🔍
+            </span>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar paciente..."
+              style={{
+                width: "100%",
+                padding: "9px 12px 9px 32px",
+                background: C.surface,
+                border: `1px solid ${C.border}`,
+                borderRadius: 10,
+                color: C.text,
+                fontSize: 13,
+                outline: "none",
+                fontFamily: "inherit",
+              }}
+            />
+          </div>
           <div
             style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
+              fontSize: 11,
               color: C.textMuted,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: ".5px",
             }}
           >
-            <div style={{ fontSize: 64, marginBottom: 16 }}>🐾</div>
-            <div style={{ fontSize: 16, fontWeight: 600 }}>
-              Selecciona un paciente
-            </div>
-            <div style={{ fontSize: 13, marginTop: 6 }}>
-              para ver su ficha médica completa
-            </div>
+            {filtered.length} paciente{filtered.length !== 1 ? "s" : ""}
           </div>
-        ) : (
-          <div className="fade-in">
-            <Card
+          <div
+            style={{
+              overflowY: isMobile ? "visible" : "auto",
+              flex: isMobile ? "none" : 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            {filtered.length === 0 && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: 32,
+                  color: C.textMuted,
+                  fontSize: 13,
+                }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>Sin
+                pacientes aún.
+              </div>
+            )}
+            {filtered.map((p) => {
+              const vCount = visits.filter((v) => v.petId === p.id).length;
+              const vacCount = vaccines.filter((v) => v.petId === p.id).length;
+              const isSelected = selectedPetId === p.id;
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => handleSelectPet(p.id)}
+                  style={{
+                    background: isSelected ? p.color + "12" : C.surface,
+                    border: `1.5px solid ${isSelected ? p.color : C.border}`,
+                    borderRadius: 12,
+                    padding: "11px 13px",
+                    cursor: "pointer",
+                    transition: "all .15s",
+                  }}
+                >
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 10 }}
+                  >
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        background: p.color + "20",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                      }}
+                    >
+                      {p.avatar}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: 700, fontSize: 13 }}>
+                        {p.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: C.textMuted }}>
+                        {p.owner}
+                      </div>
+                    </div>
+                    {isMobile && (
+                      <span style={{ fontSize: 14, color: C.textMuted }}>
+                        ›
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", gap: 6, marginTop: 7 }}>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        background: C.info + "15",
+                        color: C.info,
+                        borderRadius: 6,
+                        padding: "2px 7px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      📋 {vCount}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 10,
+                        background: C.accent + "15",
+                        color: "#0f766e",
+                        borderRadius: 6,
+                        padding: "2px 7px",
+                        fontWeight: 600,
+                      }}
+                    >
+                      💉 {vacCount}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Detail Panel */}
+      {(!isMobile || !showPatientList) && (
+        <div style={{ flex: 1, overflowY: isMobile ? "visible" : "auto" }}>
+          {isMobile && selectedPet && (
+            <button
+              onClick={() => setShowPatientList(true)}
               style={{
-                marginBottom: 20,
-                display: "flex",
-                alignItems: "center",
-                gap: 20,
+                background: "transparent",
+                border: `1px solid ${C.border}`,
+                color: C.textMuted,
+                borderRadius: 8,
+                padding: "6px 14px",
+                cursor: "pointer",
+                fontSize: 13,
+                fontWeight: 600,
+                marginBottom: 14,
+                fontFamily: "inherit",
               }}
             >
-              <div
+              ← Volver a la lista
+            </button>
+          )}
+          {!selectedPet ? (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                height: isMobile ? "auto" : "100%",
+                color: C.textMuted,
+                padding: isMobile ? "40px 0" : 0,
+              }}
+            >
+              <div style={{ fontSize: 56, marginBottom: 14 }}>🐾</div>
+              <div style={{ fontSize: 15, fontWeight: 600 }}>
+                Selecciona un paciente
+              </div>
+              <div style={{ fontSize: 13, marginTop: 6 }}>
+                para ver su ficha médica completa
+              </div>
+            </div>
+          ) : (
+            <div className="fade-in">
+              <Card
                 style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 18,
-                  background: selectedPet.color + "15",
-                  border: `2px solid ${selectedPet.color}30`,
+                  marginBottom: 16,
                   display: "flex",
                   alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 38,
+                  gap: isMobile ? 14 : 20,
+                  padding: isMobile ? 14 : 24,
                 }}
               >
-                {selectedPet.avatar}
-              </div>
-              <div style={{ flex: 1 }}>
                 <div
                   style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: 24,
-                    fontWeight: 700,
+                    width: isMobile ? 56 : 72,
+                    height: isMobile ? 56 : 72,
+                    borderRadius: 16,
+                    background: selectedPet.color + "15",
+                    border: `2px solid ${selectedPet.color}30`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: isMobile ? 28 : 38,
+                    flexShrink: 0,
                   }}
                 >
-                  {selectedPet.name}
+                  {selectedPet.avatar}
                 </div>
-                <div style={{ fontSize: 13, color: C.textMuted }}>
-                  {selectedPet.breed} · {selectedPet.species} ·{" "}
-                  {selectedPet.age} · {selectedPet.weight}
+                <div style={{ flex: 1 }}>
+                  <div
+                    style={{
+                      fontFamily: "'Playfair Display',serif",
+                      fontSize: isMobile ? 20 : 24,
+                      fontWeight: 700,
+                    }}
+                  >
+                    {selectedPet.name}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.textMuted }}>
+                    {selectedPet.breed} · {selectedPet.species} ·{" "}
+                    {selectedPet.age}
+                  </div>
+                  <div
+                    style={{ fontSize: 12, color: C.textMuted, marginTop: 2 }}
+                  >
+                    Dueño: <strong>{selectedPet.owner}</strong> · 📞{" "}
+                    {selectedPet.phone || "—"}
+                  </div>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      marginTop: 6,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <span
+                      style={{ fontSize: 11, fontWeight: 700, color: C.info }}
+                    >
+                      📋 {petVisits.length} visitas
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: "#0f766e",
+                      }}
+                    >
+                      💉 {petVaccines.length} vacunas
+                    </span>
+                    <span
+                      style={{ fontSize: 11, fontWeight: 700, color: C.purple }}
+                    >
+                      📁 {petResults.length} docs
+                    </span>
+                  </div>
                 </div>
-                <div style={{ fontSize: 13, color: C.textMuted, marginTop: 2 }}>
-                  Dueño: <strong>{selectedPet.owner}</strong> · 📞{" "}
-                  {selectedPet.phone || "—"}
-                </div>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 6,
-                  alignItems: "flex-end",
-                }}
-              >
-                <span style={{ fontSize: 13, fontWeight: 700, color: C.info }}>
-                  📋 {petVisits.length} visitas
-                </span>
-                <span
-                  style={{ fontSize: 13, fontWeight: 700, color: "#0f766e" }}
-                >
-                  💉 {petVaccines.length} vacunas
-                </span>
-                <span
-                  style={{ fontSize: 13, fontWeight: 700, color: C.purple }}
-                >
-                  📁 {petResults.length} documentos
-                </span>
-              </div>
-            </Card>
+              </Card>
 
-            {/* Vacunación */}
-            <div style={sectionStyle(C.accent)}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
-                <span style={{ fontSize: 20 }}>💉</span>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Vacunación</div>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: C.textMuted,
-                  }}
-                >
-                  {petVaccines.length} registro
-                  {petVaccines.length !== 1 ? "s" : ""}
-                </span>
-                <button
-                  onClick={() => setAddingVaccine(true)}
-                  style={{
-                    background: C.accent,
-                    color: "#000",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  + Agregar
-                </button>
-              </div>
-              {petVaccines.length === 0 ? (
+              {/* Vacunación */}
+              <div style={sectionStyle(C.accent)}>
                 <div
                   style={{
-                    fontSize: 13,
-                    color: C.textMuted,
-                    textAlign: "center",
-                    padding: "12px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
                   }}
                 >
-                  Sin vacunas registradas. Haz clic en "+ Agregar" para
-                  registrar la primera.
+                  <span style={{ fontSize: 18 }}>💉</span>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>
+                    Vacunación
+                  </div>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: C.textMuted,
+                    }}
+                  >
+                    {petVaccines.length} reg.
+                  </span>
+                  <button
+                    onClick={() => setAddingVaccine(true)}
+                    style={{
+                      background: C.accent,
+                      color: "#000",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    + Agregar
+                  </button>
                 </div>
-              ) : (
+                {petVaccines.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      textAlign: "center",
+                      padding: "10px 0",
+                    }}
+                  >
+                    Sin vacunas. Haz clic en "+ Agregar".
+                  </div>
+                ) : (
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 7 }}
+                  >
+                    {[...petVaccines]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date).getTime() -
+                          new Date(a.date).getTime()
+                      )
+                      .map((v, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            background: C.surface,
+                            borderRadius: 10,
+                            padding: "10px 14px",
+                            border: `1px solid ${C.border}`,
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 10,
+                          }}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <div
+                              style={{
+                                fontWeight: 700,
+                                fontSize: 13,
+                                marginBottom: 3,
+                              }}
+                            >
+                              {v.name}
+                            </div>
+                            <div style={{ fontSize: 11, color: C.textMuted }}>
+                              Aplicada: <strong>{v.date}</strong> · Próxima:{" "}
+                              <strong>{v.nextDue}</strong>
+                              {v.lot ? ` · Lote: ${v.lot}` : ""}
+                            </div>
+                            {v.notes && (
+                              <div
+                                style={{
+                                  fontSize: 11,
+                                  color: C.textMuted,
+                                  marginTop: 3,
+                                  fontStyle: "italic",
+                                }}
+                              >
+                                📝 {v.notes}
+                              </div>
+                            )}
+                          </div>
+                          <Badge
+                            color={v.status === "vencida" ? C.danger : C.accent}
+                          >
+                            {v.status}
+                          </Badge>
+                          <ItemActions
+                            onEdit={() => setEditingVaccine(v)}
+                            id={v.id}
+                          />
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Tratamientos */}
+              <div style={sectionStyle(C.info)}>
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
                 >
-                  {[...petVaccines]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
-                    )
-                    .map((v, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          background: C.surface,
-                          borderRadius: 10,
-                          padding: "12px 16px",
-                          border: `1px solid ${C.border}`,
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: 12,
-                        }}
-                      >
-                        <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 18 }}>💊</span>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>
+                    Tratamientos
+                  </div>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: C.textMuted,
+                    }}
+                  >
+                    {treatments.length} reg.
+                  </span>
+                  <button
+                    onClick={() => setAddingVisit(true)}
+                    style={{
+                      background: C.info,
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    + Agregar
+                  </button>
+                </div>
+                {treatments.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      textAlign: "center",
+                      padding: "10px 0",
+                    }}
+                  >
+                    Sin tratamientos registrados.
+                  </div>
+                ) : (
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 7 }}
+                  >
+                    {[...treatments]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date).getTime() -
+                          new Date(a.date).getTime()
+                      )
+                      .map((v, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            background: C.surface,
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            border: `1px solid ${C.border}`,
+                          }}
+                        >
                           <div
                             style={{
-                              fontWeight: 700,
-                              fontSize: 14,
-                              marginBottom: 4,
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 8,
+                              marginBottom: 6,
                             }}
                           >
-                            {v.name}
+                            <Badge color={C.info}>{v.type}</Badge>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: C.textMuted,
+                                fontWeight: 700,
+                                marginLeft: 4,
+                              }}
+                            >
+                              📅 {v.date}
+                            </span>
+                            <ItemActions
+                              onEdit={() => setEditingVisit(v)}
+                              id={v.id}
+                            />
                           </div>
-                          <div style={{ fontSize: 12, color: C.textMuted }}>
-                            Aplicada: <strong>{v.date}</strong> · Próxima dosis:{" "}
-                            <strong>{v.nextDue}</strong>
-                            {v.lot ? ` · Lote: ${v.lot}` : ""}
-                          </div>
-                          {v.notes && (
+                          {v.diagnosis && (
                             <div
                               style={{
                                 fontSize: 12,
-                                color: C.textMuted,
-                                marginTop: 4,
-                                fontStyle: "italic",
+                                color: C.text,
+                                lineHeight: 1.5,
                               }}
                             >
-                              📝 {v.notes}
+                              <span
+                                style={{ fontWeight: 600, color: C.textMuted }}
+                              >
+                                Diagnóstico:{" "}
+                              </span>
+                              {v.diagnosis}
+                            </div>
+                          )}
+                          {v.medications && (
+                            <div
+                              style={{
+                                background: C.info + "08",
+                                border: `1px solid ${C.info}20`,
+                                borderRadius: 8,
+                                padding: "7px 10px",
+                                marginTop: 6,
+                              }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: C.info,
+                                  textTransform: "uppercase",
+                                  marginBottom: 2,
+                                }}
+                              >
+                                💊 Medicamentos
+                              </div>
+                              <div style={{ fontSize: 12 }}>
+                                {v.medications}
+                              </div>
                             </div>
                           )}
                         </div>
-                        <Badge
-                          color={v.status === "vencida" ? C.danger : C.accent}
-                        >
-                          {v.status}
-                        </Badge>
-                        <ItemActions
-                          onEdit={() => setEditingVaccine(v)}
-                          id={v.id}
-                        />
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Tratamientos */}
-            <div style={sectionStyle(C.info)}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
-                <span style={{ fontSize: 20 }}>💊</span>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  Tratamientos
-                </div>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: C.textMuted,
-                  }}
-                >
-                  {treatments.length} registro
-                  {treatments.length !== 1 ? "s" : ""}
-                </span>
-                <button
-                  onClick={() => setAddingVisit(true)}
-                  style={{
-                    background: C.info,
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  + Agregar
-                </button>
+                      ))}
+                  </div>
+                )}
               </div>
-              {treatments.length === 0 ? (
+
+              {/* Cirugías */}
+              <div style={sectionStyle(C.danger)}>
                 <div
                   style={{
-                    fontSize: 13,
-                    color: C.textMuted,
-                    textAlign: "center",
-                    padding: "12px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
                   }}
                 >
-                  Sin tratamientos registrados.
+                  <span style={{ fontSize: 18 }}>🔬</span>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>Cirugías</div>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: C.textMuted,
+                    }}
+                  >
+                    {surgeries.length} reg.
+                  </span>
+                  <button
+                    onClick={() => setAddingVisit(true)}
+                    style={{
+                      background: C.danger,
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    + Agregar
+                  </button>
                 </div>
-              ) : (
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  {[...treatments]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
-                    )
-                    .map((v, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          background: C.surface,
-                          borderRadius: 10,
-                          padding: "14px 16px",
-                          border: `1px solid ${C.border}`,
-                        }}
-                      >
+                {surgeries.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      textAlign: "center",
+                      padding: "10px 0",
+                    }}
+                  >
+                    Sin cirugías registradas.
+                  </div>
+                ) : (
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 7 }}
+                  >
+                    {[...surgeries]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date).getTime() -
+                          new Date(a.date).getTime()
+                      )
+                      .map((v, i) => (
                         <div
+                          key={i}
                           style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            marginBottom: 8,
+                            background: C.surface,
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            border: `1px solid ${C.border}`,
                           }}
                         >
-                          <Badge color={C.info}>{v.type}</Badge>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: C.textMuted,
-                              fontWeight: 700,
-                              marginLeft: 4,
-                            }}
-                          >
-                            📅 {v.date}
-                          </span>
-                          <ItemActions
-                            onEdit={() => setEditingVisit(v)}
-                            id={v.id}
-                          />
-                        </div>
-                        {v.diagnosis && (
                           <div
                             style={{
-                              fontSize: 13,
-                              color: C.text,
-                              lineHeight: 1.5,
-                              marginBottom: v.medications || v.details ? 8 : 0,
-                            }}
-                          >
-                            <span
-                              style={{ fontWeight: 600, color: C.textMuted }}
-                            >
-                              Diagnóstico:{" "}
-                            </span>
-                            {v.diagnosis}
-                          </div>
-                        )}
-                        {v.medications && (
-                          <div
-                            style={{
-                              background: C.info + "08",
-                              border: `1px solid ${C.info}20`,
-                              borderRadius: 8,
-                              padding: "8px 12px",
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 8,
                               marginBottom: 6,
                             }}
                           >
-                            <div
+                            <Badge color={C.danger}>{v.type}</Badge>
+                            <span
                               style={{
                                 fontSize: 11,
+                                color: C.textMuted,
                                 fontWeight: 700,
-                                color: C.info,
-                                textTransform: "uppercase",
-                                letterSpacing: ".5px",
-                                marginBottom: 3,
+                                marginLeft: 4,
                               }}
                             >
-                              💊 Medicamentos
-                            </div>
+                              📅 {v.date}
+                            </span>
+                            <ItemActions
+                              onEdit={() => setEditingVisit(v)}
+                              id={v.id}
+                            />
+                          </div>
+                          {v.diagnosis && (
                             <div
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: C.text,
                                 lineHeight: 1.5,
                               }}
                             >
-                              {v.medications}
+                              {v.diagnosis}
                             </div>
-                          </div>
-                        )}
-                        {v.details && (
-                          <div
-                            style={{
-                              background: C.warning + "08",
-                              border: `1px solid ${C.warning}20`,
-                              borderRadius: 8,
-                              padding: "8px 12px",
-                            }}
-                          >
+                          )}
+                          {v.postopNotes && (
                             <div
                               style={{
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: C.warning,
-                                textTransform: "uppercase",
-                                letterSpacing: ".5px",
-                                marginBottom: 3,
+                                background: C.accent + "08",
+                                border: `1px solid ${C.accent}20`,
+                                borderRadius: 8,
+                                padding: "7px 10px",
+                                marginTop: 6,
                               }}
                             >
-                              📌 Detalles importantes
+                              <div
+                                style={{
+                                  fontSize: 10,
+                                  fontWeight: 700,
+                                  color: "#0f766e",
+                                  textTransform: "uppercase",
+                                  marginBottom: 2,
+                                }}
+                              >
+                                ✅ Post-operatorio
+                              </div>
+                              <div style={{ fontSize: 12 }}>
+                                {v.postopNotes}
+                              </div>
                             </div>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Consultas generales */}
+              <div style={sectionStyle(C.purple)}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>📋</span>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>
+                    Consultas generales
+                  </div>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: C.textMuted,
+                    }}
+                  >
+                    {consultations.length} reg.
+                  </span>
+                  <button
+                    onClick={() => setAddingVisit(true)}
+                    style={{
+                      background: C.purple,
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      fontFamily: "inherit",
+                    }}
+                  >
+                    + Agregar
+                  </button>
+                </div>
+                {consultations.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      textAlign: "center",
+                      padding: "10px 0",
+                    }}
+                  >
+                    Sin consultas generales.
+                  </div>
+                ) : (
+                  <div
+                    style={{ display: "flex", flexDirection: "column", gap: 7 }}
+                  >
+                    {[...consultations]
+                      .sort(
+                        (a, b) =>
+                          new Date(b.date).getTime() -
+                          new Date(a.date).getTime()
+                      )
+                      .map((v, i) => (
+                        <div
+                          key={i}
+                          style={{
+                            background: C.surface,
+                            borderRadius: 10,
+                            padding: "12px 14px",
+                            border: `1px solid ${C.border}`,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "flex-start",
+                              gap: 8,
+                              marginBottom: v.diagnosis ? 6 : 0,
+                            }}
+                          >
+                            <Badge color={C.purple}>{v.type}</Badge>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: C.textMuted,
+                                fontWeight: 700,
+                                marginLeft: 4,
+                              }}
+                            >
+                              📅 {v.date}
+                            </span>
+                            <ItemActions
+                              onEdit={() => setEditingVisit(v)}
+                              id={v.id}
+                            />
+                          </div>
+                          {v.diagnosis && (
                             <div
                               style={{
-                                fontSize: 13,
+                                fontSize: 12,
                                 color: C.text,
                                 lineHeight: 1.5,
                               }}
                             >
-                              {v.details}
+                              {v.diagnosis}
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Cirugías */}
-            <div style={sectionStyle(C.danger)}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
-                <span style={{ fontSize: 20 }}>🔬</span>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>Cirugías</div>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: C.textMuted,
-                  }}
-                >
-                  {surgeries.length} registro{surgeries.length !== 1 ? "s" : ""}
-                </span>
-                <button
-                  onClick={() => setAddingVisit(true)}
-                  style={{
-                    background: C.danger,
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  + Agregar
-                </button>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+                )}
               </div>
-              {surgeries.length === 0 ? (
+
+              {/* Documentos */}
+              <div style={sectionStyle("#6B7280")}>
                 <div
                   style={{
-                    fontSize: 13,
-                    color: C.textMuted,
-                    textAlign: "center",
-                    padding: "12px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    marginBottom: 12,
                   }}
                 >
-                  Sin cirugías registradas.
+                  <span style={{ fontSize: 18 }}>📁</span>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>
+                    Documentos
+                  </div>
+                  <span
+                    style={{
+                      marginLeft: "auto",
+                      fontSize: 11,
+                      color: C.textMuted,
+                    }}
+                  >
+                    {petResults.length} docs
+                  </span>
+                  <label
+                    style={{
+                      background: "#1E293B",
+                      color: "#fff",
+                      border: "none",
+                      borderRadius: 7,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: "inline-block",
+                    }}
+                  >
+                    + Subir
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      style={{ display: "none" }}
+                      onChange={handleFileUpload}
+                    />
+                  </label>
                 </div>
-              ) : (
                 <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
+                  style={{
+                    background: "#F8FAFC",
+                    border: "1px dashed #CBD5E1",
+                    borderRadius: 10,
+                    padding: "8px 12px",
+                    marginBottom: 10,
+                    fontSize: 11,
+                    color: C.textMuted,
+                  }}
                 >
-                  {[...surgeries]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
-                    )
-                    .map((v, i) => (
+                  💡 PDF, JPG, PNG. Se guardan en la sesión activa.
+                </div>
+                {petResults.length === 0 ? (
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: C.textMuted,
+                      textAlign: "center",
+                      padding: "14px 0",
+                    }}
+                  >
+                    Sin documentos subidos.
+                  </div>
+                ) : (
+                  petResults.map((r, i) => {
+                    const isPdf = r.fileType === "application/pdf";
+                    const isImage = r.fileType?.startsWith("image/");
+                    return (
                       <div
                         key={i}
                         style={{
                           background: C.surface,
                           borderRadius: 10,
-                          padding: "14px 16px",
+                          padding: "10px 14px",
                           border: `1px solid ${C.border}`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            marginBottom: 8,
-                          }}
-                        >
-                          <Badge color={C.danger}>{v.type}</Badge>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: C.textMuted,
-                              fontWeight: 700,
-                              marginLeft: 4,
-                            }}
-                          >
-                            📅 {v.date}
-                          </span>
-                          <ItemActions
-                            onEdit={() => setEditingVisit(v)}
-                            id={v.id}
-                          />
-                        </div>
-                        {v.diagnosis && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: C.text,
-                              lineHeight: 1.5,
-                              marginBottom:
-                                v.preopNotes || v.postopNotes ? 8 : 0,
-                            }}
-                          >
-                            <span
-                              style={{ fontWeight: 600, color: C.textMuted }}
-                            >
-                              Procedimiento:{" "}
-                            </span>
-                            {v.diagnosis}
-                          </div>
-                        )}
-                        {v.preopNotes && (
-                          <div
-                            style={{
-                              background: C.warning + "08",
-                              border: `1px solid ${C.warning}20`,
-                              borderRadius: 8,
-                              padding: "8px 12px",
-                              marginBottom: 6,
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: C.warning,
-                                textTransform: "uppercase",
-                                marginBottom: 3,
-                              }}
-                            >
-                              📋 Pre-operatorio
-                            </div>
-                            <div style={{ fontSize: 13 }}>{v.preopNotes}</div>
-                          </div>
-                        )}
-                        {v.postopNotes && (
-                          <div
-                            style={{
-                              background: C.accent + "08",
-                              border: `1px solid ${C.accent}20`,
-                              borderRadius: 8,
-                              padding: "8px 12px",
-                            }}
-                          >
-                            <div
-                              style={{
-                                fontSize: 11,
-                                fontWeight: 700,
-                                color: "#0f766e",
-                                textTransform: "uppercase",
-                                marginBottom: 3,
-                              }}
-                            >
-                              ✅ Post-operatorio
-                            </div>
-                            <div style={{ fontSize: 13 }}>{v.postopNotes}</div>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Consultas generales */}
-            <div style={sectionStyle(C.purple)}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
-                <span style={{ fontSize: 20 }}>📋</span>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  Consultas generales
-                </div>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: C.textMuted,
-                  }}
-                >
-                  {consultations.length} registro
-                  {consultations.length !== 1 ? "s" : ""}
-                </span>
-                <button
-                  onClick={() => setAddingVisit(true)}
-                  style={{
-                    background: C.purple,
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                  }}
-                >
-                  + Agregar
-                </button>
-              </div>
-              {consultations.length === 0 ? (
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: C.textMuted,
-                    textAlign: "center",
-                    padding: "12px 0",
-                  }}
-                >
-                  Sin consultas generales.
-                </div>
-              ) : (
-                <div
-                  style={{ display: "flex", flexDirection: "column", gap: 8 }}
-                >
-                  {[...consultations]
-                    .sort(
-                      (a, b) =>
-                        new Date(b.date).getTime() - new Date(a.date).getTime()
-                    )
-                    .map((v, i) => (
-                      <div
-                        key={i}
-                        style={{
-                          background: C.surface,
-                          borderRadius: 10,
-                          padding: "14px 16px",
-                          border: `1px solid ${C.border}`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "flex-start",
-                            gap: 8,
-                            marginBottom: v.diagnosis ? 8 : 0,
-                          }}
-                        >
-                          <Badge color={C.purple}>{v.type}</Badge>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: C.textMuted,
-                              fontWeight: 700,
-                              marginLeft: 4,
-                            }}
-                          >
-                            📅 {v.date}
-                          </span>
-                          <ItemActions
-                            onEdit={() => setEditingVisit(v)}
-                            id={v.id}
-                          />
-                        </div>
-                        {v.diagnosis && (
-                          <div
-                            style={{
-                              fontSize: 13,
-                              color: C.text,
-                              lineHeight: 1.5,
-                            }}
-                          >
-                            {v.diagnosis}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-
-            {/* Resultados */}
-            <div style={sectionStyle("#6B7280")}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  marginBottom: 14,
-                }}
-              >
-                <span style={{ fontSize: 20 }}>📁</span>
-                <div style={{ fontWeight: 700, fontSize: 15 }}>
-                  Resultados de Exámenes
-                </div>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: C.textMuted,
-                  }}
-                >
-                  {petResults.length} documento
-                  {petResults.length !== 1 ? "s" : ""}
-                </span>
-                <label
-                  style={{
-                    background: "#1E293B",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 7,
-                    padding: "5px 12px",
-                    cursor: "pointer",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    display: "inline-block",
-                  }}
-                >
-                  + Subir documento
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp"
-                    style={{ display: "none" }}
-                    onChange={handleFileUpload}
-                  />
-                </label>
-              </div>
-              <div
-                style={{
-                  background: "#F8FAFC",
-                  border: `1px dashed #CBD5E1`,
-                  borderRadius: 10,
-                  padding: "10px 14px",
-                  marginBottom: 12,
-                  fontSize: 12,
-                  color: C.textMuted,
-                }}
-              >
-                💡 Acepta PDF, JPG, PNG. Los documentos se guardan durante la
-                sesión activa.
-              </div>
-              {petResults.length === 0 ? (
-                <div
-                  style={{
-                    fontSize: 13,
-                    color: C.textMuted,
-                    textAlign: "center",
-                    padding: "20px 0",
-                  }}
-                >
-                  Sin documentos subidos.
-                </div>
-              ) : (
-                petResults.map((r, i) => {
-                  const isPdf = r.fileType === "application/pdf";
-                  const isImage = r.fileType?.startsWith("image/");
-                  return (
-                    <div
-                      key={i}
-                      style={{
-                        background: C.surface,
-                        borderRadius: 10,
-                        padding: "12px 16px",
-                        border: `1px solid ${C.border}`,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 14,
-                        marginBottom: 8,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 10,
-                          background: isPdf ? "#FF4D6D15" : "#4DA6FF15",
                           display: "flex",
                           alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: 22,
-                          flexShrink: 0,
+                          gap: 10,
+                          marginBottom: 7,
                         }}
                       >
-                        {isPdf ? "📄" : isImage ? "🖼️" : "📎"}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div
                           style={{
-                            fontWeight: 600,
-                            fontSize: 13,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {r.fileName}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: C.textMuted,
-                            marginTop: 2,
-                          }}
-                        >
-                          Subido: {r.uploadDate} · {r.fileSize}
-                        </div>
-                      </div>
-                      {isImage && (
-                        <img
-                          src={r.fileData}
-                          alt={r.fileName}
-                          style={{
-                            width: 48,
-                            height: 48,
-                            objectFit: "cover",
+                            width: 38,
+                            height: 38,
                             borderRadius: 8,
-                            border: `1px solid ${C.border}`,
+                            background: isPdf ? "#FF4D6D15" : "#4DA6FF15",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 18,
                             flexShrink: 0,
                           }}
-                        />
-                      )}
-                      <a
-                        href={r.fileData}
-                        download={r.fileName}
-                        style={{
-                          background: C.info + "15",
-                          color: C.info,
-                          border: `1px solid ${C.info}30`,
-                          borderRadius: 8,
-                          padding: "5px 12px",
-                          fontSize: 12,
-                          fontWeight: 700,
-                          textDecoration: "none",
-                          flexShrink: 0,
-                        }}
-                      >
-                        ⬇ Descargar
-                      </a>
-                      <button
-                        onClick={() => onDeleteResult(r.id)}
-                        style={{
-                          background: C.danger + "10",
-                          border: `1px solid ${C.danger}25`,
-                          borderRadius: 8,
-                          padding: "5px 8px",
-                          cursor: "pointer",
-                          fontSize: 13,
-                          color: C.danger,
-                          flexShrink: 0,
-                        }}
-                      >
-                        🗑
-                      </button>
-                    </div>
-                  );
-                })
-              )}
+                        >
+                          {isPdf ? "📄" : isImage ? "🖼️" : "📎"}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div
+                            style={{
+                              fontWeight: 600,
+                              fontSize: 12,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {r.fileName}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: 10,
+                              color: C.textMuted,
+                              marginTop: 1,
+                            }}
+                          >
+                            {r.uploadDate} · {r.fileSize}
+                          </div>
+                        </div>
+                        {isImage && (
+                          <img
+                            src={r.fileData}
+                            alt={r.fileName}
+                            style={{
+                              width: 38,
+                              height: 38,
+                              objectFit: "cover",
+                              borderRadius: 6,
+                              border: `1px solid ${C.border}`,
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
+                        <a
+                          href={r.fileData}
+                          download={r.fileName}
+                          style={{
+                            background: C.info + "15",
+                            color: C.info,
+                            border: `1px solid ${C.info}30`,
+                            borderRadius: 7,
+                            padding: "4px 8px",
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textDecoration: "none",
+                            flexShrink: 0,
+                          }}
+                        >
+                          ⬇
+                        </a>
+                        <button
+                          onClick={() => onDeleteResult(r.id)}
+                          style={{
+                            background: C.danger + "10",
+                            border: `1px solid ${C.danger}25`,
+                            borderRadius: 7,
+                            padding: "4px 7px",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            color: C.danger,
+                            flexShrink: 0,
+                            fontFamily: "inherit",
+                          }}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -6039,7 +6646,7 @@ function EditVisitModal({ visit, onClose, onSave }) {
     </div>
   );
   return (
-    <ModalWrap title="✏️ Editar Registro Médico" onClose={onClose}>
+    <ModalWrap title="✏️ Editar Registro" onClose={onClose}>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         <Input
           label="Fecha"
@@ -6054,14 +6661,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
           placeholder="Ej: Tratamiento, Cirugía..."
         />
       </div>
-      {isTreatment && (
-        <Input
-          label="🗓 Inicio del tratamiento"
-          type="date"
-          value={form.startDate}
-          onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-        />
-      )}
       <TextArea
         label="Diagnóstico / Notas"
         field="diagnosis"
@@ -6071,7 +6670,7 @@ function EditVisitModal({ visit, onClose, onSave }) {
       {isTreatment && (
         <>
           <TextArea
-            label="💊 Medicamentos prescritos"
+            label="💊 Medicamentos"
             field="medications"
             placeholder="Ej: Amoxicilina 250mg c/8h x 7 días..."
           />
@@ -6097,14 +6696,6 @@ function EditVisitModal({ visit, onClose, onSave }) {
           />
         </>
       )}
-      {!isTreatment && !isSurgery && (
-        <TextArea
-          label="📝 Observaciones adicionales"
-          field="details"
-          placeholder="Detalles adicionales..."
-          rows={2}
-        />
-      )}
       <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
         <button
           onClick={onClose}
@@ -6117,6 +6708,7 @@ function EditVisitModal({ visit, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -6132,6 +6724,7 @@ function EditVisitModal({ visit, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 700,
+            fontFamily: "inherit",
           }}
         >
           Guardar cambios
@@ -6221,7 +6814,6 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
           value={form.notes}
           onChange={(e) => setForm({ ...form, notes: e.target.value })}
           rows={2}
-          placeholder="Observaciones sobre la vacuna..."
           style={{
             width: "100%",
             padding: "10px 14px",
@@ -6248,6 +6840,7 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -6265,6 +6858,7 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.name ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Guardar cambios
@@ -6276,6 +6870,7 @@ function EditVaccineModal({ vaccine, onClose, onSave }) {
 
 // ─── INVENTARIO ───────────────────────────────────────────────────────────────
 function InventarioPage({ inventory, onUpdate }) {
+  const isMobile = useIsMobile();
   const CATEGORIES = [
     "Vacunas",
     "Pipetas",
@@ -6328,7 +6923,6 @@ function InventarioPage({ inventory, onUpdate }) {
     const matchCat = catFilter === "Todos" || item.category === catFilter;
     return matchSearch && matchCat;
   });
-
   const lowStock = inventory.filter(
     (item) =>
       item.minStock && parseInt(item.quantity) <= parseInt(item.minStock)
@@ -6372,15 +6966,14 @@ function InventarioPage({ inventory, onUpdate }) {
     );
   };
 
-  const catStats = CATEGORIES.map((c) => ({
-    cat: c,
-    count: inventory.filter((i) => i.category === c).length,
-  })).filter((s) => s.count > 0);
-
   return (
     <div
       className="fade-in"
-      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: isMobile ? 14 : 20,
+      }}
     >
       {showModal && (
         <ModalWrap
@@ -6388,7 +6981,11 @@ function InventarioPage({ inventory, onUpdate }) {
           onClose={() => setShowModal(false)}
         >
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 12,
+            }}
           >
             <Input
               label="Nombre del producto *"
@@ -6448,7 +7045,7 @@ function InventarioPage({ inventory, onUpdate }) {
               label="Unidad"
               value={form.unit}
               onChange={(e) => setForm({ ...form, unit: e.target.value })}
-              placeholder="unidades, ml, g..."
+              placeholder="unidades"
             />
             <Input
               label="Stock mínimo"
@@ -6460,7 +7057,11 @@ function InventarioPage({ inventory, onUpdate }) {
             />
           </div>
           <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 12,
+            }}
           >
             <Input
               label="Fecha de vencimiento"
@@ -6469,7 +7070,7 @@ function InventarioPage({ inventory, onUpdate }) {
               onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
             />
             <Input
-              label="Precio unitario (S/)"
+              label="Precio (S/)"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: e.target.value })}
               placeholder="0.00"
@@ -6492,7 +7093,6 @@ function InventarioPage({ inventory, onUpdate }) {
               value={form.notes}
               onChange={(e) => setForm({ ...form, notes: e.target.value })}
               rows={2}
-              placeholder="Proveedor, indicaciones..."
               style={{
                 width: "100%",
                 padding: "10px 14px",
@@ -6519,6 +7119,7 @@ function InventarioPage({ inventory, onUpdate }) {
                 borderRadius: 10,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontFamily: "inherit",
               }}
             >
               Cancelar
@@ -6536,9 +7137,10 @@ function InventarioPage({ inventory, onUpdate }) {
                 cursor: "pointer",
                 fontWeight: 700,
                 opacity: !form.name || !form.quantity ? 0.5 : 1,
+                fontFamily: "inherit",
               }}
             >
-              {editItem ? "Actualizar" : "Agregar producto"}
+              {editItem ? "Actualizar" : "Agregar"}
             </button>
           </div>
         </ModalWrap>
@@ -6563,6 +7165,7 @@ function InventarioPage({ inventory, onUpdate }) {
                 borderRadius: 10,
                 cursor: "pointer",
                 fontWeight: 600,
+                fontFamily: "inherit",
               }}
             >
               Cancelar
@@ -6578,6 +7181,7 @@ function InventarioPage({ inventory, onUpdate }) {
                 borderRadius: 10,
                 cursor: "pointer",
                 fontWeight: 700,
+                fontFamily: "inherit",
               }}
             >
               Eliminar
@@ -6585,6 +7189,7 @@ function InventarioPage({ inventory, onUpdate }) {
           </div>
         </ModalWrap>
       )}
+
       <div
         style={{
           display: "flex",
@@ -6595,15 +7200,15 @@ function InventarioPage({ inventory, onUpdate }) {
         <div>
           <div
             style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 26,
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 22 : 26,
               fontWeight: 700,
             }}
           >
-            Inventario Médico
+            Inventario
           </div>
-          <div style={{ color: C.textMuted, fontSize: 13, marginTop: 4 }}>
-            {inventory.length} productos · {lowStock.length} con stock bajo ·{" "}
+          <div style={{ color: C.textMuted, fontSize: 12, marginTop: 4 }}>
+            {inventory.length} productos · {lowStock.length} stock bajo ·{" "}
             {expiredItems.length} vencidos
           </div>
         </div>
@@ -6614,24 +7219,27 @@ function InventarioPage({ inventory, onUpdate }) {
             color: "#000",
             border: "none",
             borderRadius: 10,
-            padding: "10px 22px",
+            padding: isMobile ? "8px 14px" : "10px 22px",
             fontWeight: 700,
             cursor: "pointer",
-            fontSize: 14,
+            fontSize: isMobile ? 13 : 14,
+            fontFamily: "inherit",
           }}
         >
-          + Agregar producto
+          + Agregar
         </button>
       </div>
+
       {(lowStock.length > 0 || expiredItems.length > 0) && (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              lowStock.length > 0 && expiredItems.length > 0
-                ? "1fr 1fr"
-                : "1fr",
-            gap: 12,
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : lowStock.length > 0 && expiredItems.length > 0
+              ? "1fr 1fr"
+              : "1fr",
+            gap: 10,
           }}
         >
           {lowStock.length > 0 && (
@@ -6640,15 +7248,15 @@ function InventarioPage({ inventory, onUpdate }) {
                 background: C.warning + "12",
                 border: `1.5px solid ${C.warning}30`,
                 borderRadius: 12,
-                padding: "14px 18px",
+                padding: "12px 16px",
               }}
             >
               <div
                 style={{
                   fontWeight: 700,
                   color: C.warning,
-                  marginBottom: 8,
-                  fontSize: 14,
+                  marginBottom: 7,
+                  fontSize: 13,
                 }}
               >
                 ⚠️ Stock Bajo ({lowStock.length})
@@ -6661,12 +7269,12 @@ function InventarioPage({ inventory, onUpdate }) {
                       background: C.warning + "20",
                       color: "#92400e",
                       borderRadius: 8,
-                      padding: "3px 10px",
-                      fontSize: 12,
+                      padding: "2px 8px",
+                      fontSize: 11,
                       fontWeight: 600,
                     }}
                   >
-                    {item.name}: {item.quantity} {item.unit}
+                    {item.name}: {item.quantity}
                   </span>
                 ))}
               </div>
@@ -6678,18 +7286,18 @@ function InventarioPage({ inventory, onUpdate }) {
                 background: C.danger + "10",
                 border: `1.5px solid ${C.danger}25`,
                 borderRadius: 12,
-                padding: "14px 18px",
+                padding: "12px 16px",
               }}
             >
               <div
                 style={{
                   fontWeight: 700,
                   color: C.danger,
-                  marginBottom: 8,
-                  fontSize: 14,
+                  marginBottom: 7,
+                  fontSize: 13,
                 }}
               >
-                🚫 Productos Vencidos ({expiredItems.length})
+                🚫 Vencidos ({expiredItems.length})
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {expiredItems.map((item) => (
@@ -6699,12 +7307,12 @@ function InventarioPage({ inventory, onUpdate }) {
                       background: C.danger + "15",
                       color: C.danger,
                       borderRadius: 8,
-                      padding: "3px 10px",
-                      fontSize: 12,
+                      padding: "2px 8px",
+                      fontSize: 11,
                       fontWeight: 600,
                     }}
                   >
-                    {item.name} — {item.expiryDate}
+                    {item.name}
                   </span>
                 ))}
               </div>
@@ -6712,64 +7320,16 @@ function InventarioPage({ inventory, onUpdate }) {
           )}
         </div>
       )}
-      {catStats.length > 0 && (
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          {catStats.map(({ cat, count }) => (
-            <div
-              key={cat}
-              onClick={() => setCatFilter(catFilter === cat ? "Todos" : cat)}
-              style={{
-                background:
-                  catFilter === cat ? CAT_COLOR[cat] + "20" : C.surface,
-                border: `1.5px solid ${
-                  catFilter === cat ? CAT_COLOR[cat] : C.border
-                }`,
-                borderRadius: 10,
-                padding: "10px 16px",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                transition: "all .15s",
-              }}
-            >
-              <span style={{ fontSize: 18 }}>{CAT_ICON[cat]}</span>
-              <div>
-                <div
-                  style={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    color: CAT_COLOR[cat],
-                  }}
-                >
-                  {count}
-                </div>
-                <div
-                  style={{ fontSize: 11, color: C.textMuted, fontWeight: 600 }}
-                >
-                  {cat}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          alignItems: "center",
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
+
+      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <div style={{ position: "relative", flex: 1, minWidth: 160 }}>
           <span
             style={{
               position: "absolute",
-              left: 14,
+              left: 12,
               top: "50%",
               transform: "translateY(-50%)",
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
             🔍
@@ -6777,20 +7337,21 @@ function InventarioPage({ inventory, onUpdate }) {
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar producto o categoría..."
+            placeholder="Buscar producto..."
             style={{
               width: "100%",
-              padding: "10px 16px 10px 38px",
+              padding: "9px 12px 9px 34px",
               background: C.surface,
               border: `1px solid ${C.border}`,
               borderRadius: 10,
               color: C.text,
-              fontSize: 14,
+              fontSize: 13,
               outline: "none",
+              fontFamily: "inherit",
             }}
           />
         </div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
           {["Todos", ...CATEGORIES].map((f) => (
             <button
               key={f}
@@ -6800,11 +7361,12 @@ function InventarioPage({ inventory, onUpdate }) {
                 color: catFilter === f ? "#fff" : C.textMuted,
                 border: `1px solid ${catFilter === f ? "#1E293B" : C.border}`,
                 borderRadius: 8,
-                padding: "6px 12px",
+                padding: "6px 10px",
                 cursor: "pointer",
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: 600,
                 whiteSpace: "nowrap",
+                fontFamily: "inherit",
               }}
             >
               {f === "Todos" ? "🗂 Todos" : `${CAT_ICON[f]} ${f}`}
@@ -6812,26 +7374,29 @@ function InventarioPage({ inventory, onUpdate }) {
           ))}
         </div>
       </div>
+
       {filtered.length === 0 ? (
         <div
-          style={{ textAlign: "center", padding: "60px 0", color: C.textMuted }}
+          style={{ textAlign: "center", padding: "50px 0", color: C.textMuted }}
         >
-          <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
-          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 6 }}>
+          <div style={{ fontSize: 44, marginBottom: 10 }}>📦</div>
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>
             Inventario vacío
           </div>
           <div style={{ fontSize: 13 }}>
             {inventory.length === 0
-              ? "Agrega tu primer producto usando el botón de arriba."
-              : "No hay productos que coincidan con tu búsqueda."}
+              ? "Agrega tu primer producto."
+              : "No hay productos que coincidan."}
           </div>
         </div>
       ) : (
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(310px, 1fr))",
-            gap: 16,
+            gridTemplateColumns: isMobile
+              ? "1fr"
+              : "repeat(auto-fill,minmax(300px,1fr))",
+            gap: isMobile ? 10 : 16,
           }}
         >
           {filtered.map((item) => {
@@ -6854,26 +7419,26 @@ function InventarioPage({ inventory, onUpdate }) {
                     isLow || isExpired ? C.danger + "35" : C.border
                   }`,
                   borderRadius: 16,
-                  padding: 18,
+                  padding: isMobile ? 14 : 18,
                   boxShadow: "0 2px 6px rgba(0,0,0,0.03)",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 12,
+                  gap: 10,
                 }}
               >
                 <div
-                  style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
+                  style={{ display: "flex", alignItems: "flex-start", gap: 10 }}
                 >
                   <div
                     style={{
-                      width: 46,
-                      height: 46,
-                      borderRadius: 12,
+                      width: 42,
+                      height: 42,
+                      borderRadius: 10,
                       background: color + "18",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      fontSize: 22,
+                      fontSize: 20,
                       flexShrink: 0,
                     }}
                   >
@@ -6883,7 +7448,7 @@ function InventarioPage({ inventory, onUpdate }) {
                     <div
                       style={{
                         fontWeight: 700,
-                        fontSize: 14,
+                        fontSize: 13,
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
@@ -6893,17 +7458,18 @@ function InventarioPage({ inventory, onUpdate }) {
                     </div>
                     <Badge color={color}>{item.category}</Badge>
                   </div>
-                  <div style={{ display: "flex", gap: 5, flexShrink: 0 }}>
+                  <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
                     <button
                       onClick={() => openEdit(item)}
                       style={{
                         background: C.bg,
                         border: `1px solid ${C.border}`,
                         borderRadius: 7,
-                        padding: "4px 9px",
+                        padding: "3px 8px",
                         cursor: "pointer",
                         fontSize: 12,
                         color: C.textMuted,
+                        fontFamily: "inherit",
                       }}
                     >
                       ✏️
@@ -6914,10 +7480,11 @@ function InventarioPage({ inventory, onUpdate }) {
                         background: C.danger + "10",
                         border: `1px solid ${C.danger}25`,
                         borderRadius: 7,
-                        padding: "4px 9px",
+                        padding: "3px 8px",
                         cursor: "pointer",
                         fontSize: 12,
                         color: C.danger,
+                        fontFamily: "inherit",
                       }}
                     >
                       🗑
@@ -6946,7 +7513,7 @@ function InventarioPage({ inventory, onUpdate }) {
                   >
                     <span
                       style={{
-                        fontSize: 12,
+                        fontSize: 11,
                         color: C.textMuted,
                         fontWeight: 600,
                       }}
@@ -6954,23 +7521,24 @@ function InventarioPage({ inventory, onUpdate }) {
                       Stock actual
                     </span>
                     <div
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
+                      style={{ display: "flex", alignItems: "center", gap: 7 }}
                     >
                       <button
                         onClick={() => adjustQty(item, -1)}
                         style={{
-                          width: 26,
-                          height: 26,
+                          width: 24,
+                          height: 24,
                           borderRadius: 6,
                           border: `1px solid ${C.border}`,
                           background: C.surface,
                           cursor: "pointer",
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: 700,
                           color: C.danger,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          fontFamily: "inherit",
                         }}
                       >
                         −
@@ -6978,9 +7546,9 @@ function InventarioPage({ inventory, onUpdate }) {
                       <span
                         style={{
                           fontWeight: 800,
-                          fontSize: 18,
+                          fontSize: 17,
                           color: isLow ? C.warning : color,
-                          minWidth: 40,
+                          minWidth: 32,
                           textAlign: "center",
                         }}
                       >
@@ -6989,23 +7557,24 @@ function InventarioPage({ inventory, onUpdate }) {
                       <button
                         onClick={() => adjustQty(item, 1)}
                         style={{
-                          width: 26,
-                          height: 26,
+                          width: 24,
+                          height: 24,
                           borderRadius: 6,
                           border: `1px solid ${C.border}`,
                           background: C.surface,
                           cursor: "pointer",
-                          fontSize: 14,
+                          fontSize: 13,
                           fontWeight: 700,
                           color: C.accent,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
+                          fontFamily: "inherit",
                         }}
                       >
                         +
                       </button>
-                      <span style={{ fontSize: 12, color: C.textMuted }}>
+                      <span style={{ fontSize: 11, color: C.textMuted }}>
                         {item.unit}
                       </span>
                     </div>
@@ -7030,94 +7599,89 @@ function InventarioPage({ inventory, onUpdate }) {
                       />
                     </div>
                   )}
-                  {item.minStock && (
-                    <div
-                      style={{ fontSize: 11, color: C.textMuted, marginTop: 4 }}
-                    >
-                      Mínimo: {item.minStock} {item.unit}
-                    </div>
-                  )}
                 </div>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: 6,
-                  }}
-                >
-                  {item.expiryDate && (
-                    <div
-                      style={{
-                        background: C.bg,
-                        borderRadius: 8,
-                        padding: "6px 10px",
-                        border: `1px solid ${
-                          isExpired ? C.danger + "30" : C.border
-                        }`,
-                      }}
-                    >
+                {(item.expiryDate || item.price) && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr",
+                      gap: 6,
+                    }}
+                  >
+                    {item.expiryDate && (
                       <div
                         style={{
-                          fontSize: 10,
-                          color: C.textDim,
-                          fontWeight: 600,
+                          background: C.bg,
+                          borderRadius: 8,
+                          padding: "6px 10px",
+                          border: `1px solid ${
+                            isExpired ? C.danger + "30" : C.border
+                          }`,
                         }}
                       >
-                        📅 Vence
+                        <div
+                          style={{
+                            fontSize: 9,
+                            color: C.textDim,
+                            fontWeight: 600,
+                          }}
+                        >
+                          📅 Vence
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: isExpired ? C.danger : C.text,
+                            marginTop: 2,
+                          }}
+                        >
+                          {item.expiryDate}
+                        </div>
                       </div>
+                    )}
+                    {item.price && (
                       <div
                         style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: isExpired ? C.danger : C.text,
-                          marginTop: 2,
+                          background: C.bg,
+                          borderRadius: 8,
+                          padding: "6px 10px",
+                          border: `1px solid ${C.border}`,
                         }}
                       >
-                        {item.expiryDate}
+                        <div
+                          style={{
+                            fontSize: 9,
+                            color: C.textDim,
+                            fontWeight: 600,
+                          }}
+                        >
+                          💰 Precio
+                        </div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: C.text,
+                            marginTop: 2,
+                          }}
+                        >
+                          S/ {item.price}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {item.price && (
-                    <div
-                      style={{
-                        background: C.bg,
-                        borderRadius: 8,
-                        padding: "6px 10px",
-                        border: `1px solid ${C.border}`,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 10,
-                          color: C.textDim,
-                          fontWeight: 600,
-                        }}
-                      >
-                        💰 Precio unit.
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: C.text,
-                          marginTop: 2,
-                        }}
-                      >
-                        S/ {item.price}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
                 {(isLow || isExpired) && (
-                  <div style={{ display: "flex", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
                     {isLow && (
                       <span
                         style={{
                           background: C.warning + "18",
                           color: "#92400e",
                           borderRadius: 6,
-                          padding: "3px 10px",
-                          fontSize: 11,
+                          padding: "2px 8px",
+                          fontSize: 10,
                           fontWeight: 700,
                         }}
                       >
@@ -7130,8 +7694,8 @@ function InventarioPage({ inventory, onUpdate }) {
                           background: C.danger + "15",
                           color: C.danger,
                           borderRadius: 6,
-                          padding: "3px 10px",
-                          fontSize: 11,
+                          padding: "2px 8px",
+                          fontSize: 10,
                           fontWeight: 700,
                         }}
                       >
@@ -7143,11 +7707,11 @@ function InventarioPage({ inventory, onUpdate }) {
                 {item.notes && (
                   <div
                     style={{
-                      fontSize: 12,
+                      fontSize: 11,
                       color: C.textMuted,
                       fontStyle: "italic",
                       borderTop: `1px solid ${C.border}`,
-                      paddingTop: 10,
+                      paddingTop: 8,
                     }}
                   >
                     📝 {item.notes}
@@ -7164,6 +7728,7 @@ function InventarioPage({ inventory, onUpdate }) {
 
 // ─── MODALS ───────────────────────────────────────────────────────────────────
 function ModalWrap({ title, onClose, children }) {
+  const isMobile = useIsMobile();
   return (
     <div
       style={{
@@ -7171,7 +7736,7 @@ function ModalWrap({ title, onClose, children }) {
         inset: 0,
         background: "rgba(15,23,43,0.4)",
         display: "flex",
-        alignItems: "center",
+        alignItems: isMobile ? "flex-end" : "center",
         justifyContent: "center",
         zIndex: 100,
         backdropFilter: "blur(2px)",
@@ -7181,27 +7746,38 @@ function ModalWrap({ title, onClose, children }) {
         style={{
           background: C.surface,
           border: `1px solid ${C.border}`,
-          borderRadius: 20,
-          padding: 32,
-          width: 500,
-          maxHeight: "90vh",
+          borderRadius: isMobile ? "20px 20px 0 0" : 20,
+          padding: isMobile ? "24px 20px 32px" : 32,
+          width: isMobile ? "100%" : 500,
+          maxHeight: isMobile ? "92vh" : "90vh",
           overflowY: "auto",
-          animation: "fadeIn .3s ease",
+          animation: isMobile ? "slideUp .35s ease" : "fadeIn .3s ease",
           boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1)",
         }}
       >
+        {isMobile && (
+          <div
+            style={{
+              width: 36,
+              height: 4,
+              background: C.border,
+              borderRadius: 2,
+              margin: "0 auto 16px",
+            }}
+          />
+        )}
         <div
           style={{
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 24,
+            marginBottom: 20,
           }}
         >
           <div
             style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 22,
+              fontFamily: "'Playfair Display',serif",
+              fontSize: isMobile ? 18 : 22,
               fontWeight: 700,
             }}
           >
@@ -7218,6 +7794,7 @@ function ModalWrap({ title, onClose, children }) {
               cursor: "pointer",
               fontSize: 16,
               color: C.textMuted,
+              fontFamily: "inherit",
             }}
           >
             ✕
@@ -7276,7 +7853,7 @@ function NewAppointmentModal({ pets, prefill, onClose, onSave }) {
           list="pets-list"
           value={form.petName}
           onChange={(e) => setForm({ ...form, petName: e.target.value })}
-          placeholder="Escribe el nombre del paciente..."
+          placeholder="Escribe el nombre..."
           style={{
             width: "100%",
             padding: "10px 14px",
@@ -7343,7 +7920,7 @@ function NewAppointmentModal({ pets, prefill, onClose, onSave }) {
           label="Especificar Tipo"
           value={form.typeOther}
           onChange={(e) => setForm({ ...form, typeOther: e.target.value })}
-          placeholder="Especifique el tipo..."
+          placeholder="Especifique..."
         />
       )}
       <div style={{ marginBottom: 14 }}>
@@ -7395,6 +7972,7 @@ function NewAppointmentModal({ pets, prefill, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -7427,6 +8005,7 @@ function NewAppointmentModal({ pets, prefill, onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.petName || !form.time || !form.date ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Guardar Cita
@@ -7445,6 +8024,7 @@ function NewPatientModal({ onClose, onSave }) {
     Otro: "🐾",
   };
   const COLORS_PET = ["#9B72FF", "#FFB347", "#4DA6FF", "#00D4A0", "#FF4D6D"];
+  const isMobile = useIsMobile();
   const [form, setForm] = useState({
     name: "",
     owner: "",
@@ -7459,7 +8039,13 @@ function NewPatientModal({ onClose, onSave }) {
   });
   return (
     <ModalWrap title="Nuevo Paciente" onClose={onClose}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: 12,
+        }}
+      >
         <Input
           label="Nombre *"
           value={form.name}
@@ -7530,9 +8116,8 @@ function NewPatientModal({ onClose, onSave }) {
       <div
         style={{
           borderTop: `1px solid ${C.border}`,
-          paddingTop: 16,
+          paddingTop: 14,
           marginTop: 4,
-          marginBottom: 4,
         }}
       >
         <Input
@@ -7549,14 +8134,14 @@ function NewPatientModal({ onClose, onSave }) {
             type="tel"
             value={form.phone}
             onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            placeholder="Ej: 987654321"
+            placeholder="987654321"
           />
           <Input
             label="Correo (Opcional)"
             type="email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            placeholder="ejemplo@mail.com"
+            placeholder="mail@ejemplo.com"
           />
         </div>
       </div>
@@ -7572,6 +8157,7 @@ function NewPatientModal({ onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -7597,6 +8183,7 @@ function NewPatientModal({ onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.name || !form.owner || !form.phone ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Registrar Paciente
@@ -7624,7 +8211,7 @@ function NewVisitModal({ pet, onClose, onSave }) {
         label="Tipo de consulta *"
         value={form.type}
         onChange={(e) => setForm({ ...form, type: e.target.value })}
-        placeholder="Ej: Control, Urgencia, Tratamiento, Cirugía..."
+        placeholder="Ej: Control, Urgencia, Tratamiento..."
       />
       <div style={{ marginBottom: 14 }}>
         <div
@@ -7670,6 +8257,7 @@ function NewVisitModal({ pet, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -7689,6 +8277,7 @@ function NewVisitModal({ pet, onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.type ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Guardar Consulta
@@ -7779,6 +8368,7 @@ function NewVaccineModal({ pet, onClose, onSave }) {
             borderRadius: 10,
             cursor: "pointer",
             fontWeight: 600,
+            fontFamily: "inherit",
           }}
         >
           Cancelar
@@ -7796,6 +8386,7 @@ function NewVaccineModal({ pet, onClose, onSave }) {
             cursor: "pointer",
             fontWeight: 700,
             opacity: !form.name || !form.nextDue ? 0.5 : 1,
+            fontFamily: "inherit",
           }}
         >
           Guardar Vacuna
